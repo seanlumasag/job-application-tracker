@@ -1,6 +1,27 @@
-# Full Stack Application Framework
+# Job Application Tracker
 
-A modern full stack application framework built with **React**, **Spring Boot**, and **Supabase**.
+A backend-first internal tool for managing a job search as an operations workflow, built with **React**, **Spring Boot**, and **Supabase**.
+
+The goal is to grow this deliberately in small, safe steps. Each milestone is a real, usable slice that adds one core capability at a time.
+
+## Product Direction (Incremental)
+
+Start small and build toward a full system:
+
+1. **MVP: Applications + Basic CRUD**
+   - Store applications (company, role, link, notes)
+   - Simple list view with create/update/delete
+2. **Workflow Rules**
+   - Stages with valid transitions only
+   - Automatic timestamps + stage history
+3. **Tasks & Follow-ups**
+   - Due dates, overdue detection, "today/this week" views
+4. **Audit Log**
+   - Record key events (stage changes, task completion)
+5. **Contacts & Interactions**
+   - Recruiters/people and interaction notes
+
+Each step is implemented fully before moving to the next.
 
 ## 🚀 Quick Start
 
@@ -144,8 +165,24 @@ dev/
 
 ## Features
 
+### Current
+- Basic items CRUD for API + UI scaffolding
+- Backend connectivity checks
+
+### Planned (Incremental)
+1. **Applications**
+   - `applications` table + REST endpoints
+2. **Stage Workflow**
+   - Valid transitions + stage events
+3. **Tasks**
+   - Task creation, due dates, completion
+4. **Audit Log**
+   - Event history for key actions
+5. **Contacts & Interactions**
+   - People + interaction logging
+
 ### Authentication
-- Handled by backend API endpoints
+- Will be handled by backend API endpoints (JWT)
 
 ### CRUD Operations
 - Create, Read, Update, Delete operations for items
