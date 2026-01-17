@@ -9,10 +9,10 @@ This full stack application follows a three-tier architecture:
 │                   Frontend Layer                     │
 │              React + TypeScript + Vite               │
 │                                                       │
-│  ┌──────────────┐  ┌──────────────┐  ┌───────────┐ │
-│  │ Auth Service │  │ API Service  │  │Components │ │
-│  │  (Supabase)  │  │   (Axios)    │  │   (UI)    │ │
-│  └──────────────┘  └──────────────┘  └───────────┘ │
+│  ┌──────────────┐  ┌───────────┐ │
+│  │ API Service  │  │Components │ │
+│  │   (Axios)    │  │   (UI)    │ │
+│  └──────────────┘  └───────────┘ │
 └───────────────────────┬─────────────────────────────┘
                         │ HTTP/REST
                         ▼
@@ -29,12 +29,12 @@ This full stack application follows a three-tier architecture:
                         ▼
 ┌─────────────────────────────────────────────────────┐
 │                   Database Layer                     │
-│         Supabase PostgreSQL + Auth System            │
+│               Supabase PostgreSQL Database           │
 │                                                       │
-│  ┌──────────────┐  ┌──────────────┐  ┌───────────┐ │
-│  │   Tables     │  │    Auth      │  │   RLS     │ │
-│  │  (Storage)   │  │   (Users)    │  │ (Security)│ │
-│  └──────────────┘  └──────────────┘  └───────────┘ │
+│  ┌──────────────┐ │
+│  │   Tables     │ │
+│  │  (Storage)   │ │
+│  └──────────────┘ │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -45,18 +45,14 @@ This full stack application follows a three-tier architecture:
 **Technology Stack:**
 - React 18 with TypeScript
 - Vite for build tooling
-- Supabase JS Client for authentication
 - Axios for HTTP requests
 
 **Key Components:**
-1. **App.tsx** - Main application component with auth state management
-2. **AuthForm.tsx** - User authentication (login/signup)
-3. **ItemList.tsx** - CRUD operations for items
-4. **Services Layer:**
-   - `authService.ts` - Authentication with Supabase
+1. **App.tsx** - Main application component
+2. **ItemList.tsx** - CRUD operations for items
+3. **Services Layer:**
    - `itemService.ts` - REST API calls to backend
-5. **Library Configuration:**
-   - `supabaseClient.ts` - Supabase client setup
+4. **Library Configuration:**
    - `apiClient.ts` - Axios HTTP client configuration
 
 **Data Flow:**
@@ -115,10 +111,7 @@ HTTP Request → Controller → Service → Repository → Database
 
 **Features Used:**
 1. **PostgreSQL Database** - Relational data storage
-2. **Authentication System** - User management
-3. **Row Level Security (RLS)** - Fine-grained access control
-4. **Real-time Subscriptions** - Live data updates (optional)
-5. **Connection Pooling** - Optimized connections
+2. **Connection Pooling** - Optimized connections
 
 **Schema:**
 ```sql
@@ -131,8 +124,6 @@ CREATE TABLE items (
     updated_at TIMESTAMP
 );
 
--- Supabase Auth (built-in)
--- Users table managed by Supabase
 ```
 
 ## API Endpoints
@@ -155,10 +146,7 @@ DELETE /api/items/{id}  - Delete item
 ## Security
 
 ### Frontend Security
-- Environment variables for sensitive configuration
-- Supabase Auth for user authentication
-- JWT token management
-- Secure cookie handling
+- Environment variables for configuration
 
 ### Backend Security
 - CORS configuration for allowed origins
@@ -167,10 +155,8 @@ DELETE /api/items/{id}  - Delete item
 - Connection pooling
 
 ### Database Security
-- Supabase Row Level Security (RLS)
 - SSL connections
 - Prepared statements (SQL injection prevention)
-- Password encryption (handled by Supabase)
 
 ## Environment Configuration
 
@@ -182,8 +168,6 @@ DELETE /api/items/{id}  - Delete item
 ### Environment Variables
 **Frontend (.env):**
 ```
-VITE_SUPABASE_URL=your-supabase-url
-VITE_SUPABASE_ANON_KEY=your-anon-key
 VITE_API_BASE_URL=http://localhost:8080/api
 ```
 

@@ -54,8 +54,6 @@ Before deploying, ensure you have:
 
 2. **Create `.env.production`**
    ```
-   VITE_SUPABASE_URL=your-supabase-url
-   VITE_SUPABASE_ANON_KEY=your-anon-key
    VITE_API_BASE_URL=https://your-backend.onrender.com/api
    ```
 
@@ -122,8 +120,6 @@ Before deploying, ensure you have:
 
 5. **Add Environment Variables**
    ```
-   VITE_SUPABASE_URL=your-supabase-url
-   VITE_SUPABASE_ANON_KEY=your-anon-key
    VITE_API_BASE_URL=https://your-backend.up.railway.app/api
    ```
 
@@ -158,8 +154,6 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . .
-ARG VITE_SUPABASE_URL
-ARG VITE_SUPABASE_ANON_KEY
 ARG VITE_API_BASE_URL
 RUN npm run build
 
@@ -203,8 +197,6 @@ services:
     build: 
       context: ./frontend
       args:
-        - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
-        - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
         - VITE_API_BASE_URL=http://localhost:8080/api
     ports:
       - "80:80"
@@ -237,7 +229,6 @@ docker-compose down
 ### Frontend
 - [ ] Application loads without errors
 - [ ] Can connect to backend API
-- [ ] Supabase authentication works
 - [ ] All features functional
 - [ ] Console shows no errors
 
@@ -245,16 +236,10 @@ docker-compose down
 - [ ] Connection from backend works
 - [ ] Tables created automatically
 - [ ] Supabase dashboard accessible
-- [ ] Authentication system working
 
 ## Testing Production Deployment
 
-1. **Test Authentication**
-   - Sign up with a new account
-   - Log in with credentials
-   - Log out
-
-2. **Test CRUD Operations**
+1. **Test CRUD Operations**
    - Create new items
    - View items list
    - Update existing items
@@ -310,16 +295,6 @@ Solution:
 1. Add frontend domain to CORS config
 2. Update CorsConfig.java allowedOrigins
 3. Redeploy backend
-```
-
-#### Authentication not working
-```
-Error: Invalid API key
-
-Solution:
-1. Verify VITE_SUPABASE_ANON_KEY is correct
-2. Check Supabase project settings
-3. Ensure environment variables are set
 ```
 
 ## Rollback Plan

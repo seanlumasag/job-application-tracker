@@ -35,10 +35,6 @@ cd dev
    - Copy the **Connection String** (URI format)
    - Note: Change `[YOUR-PASSWORD]` to your actual password
 
-2. Go to **Settings** → **API**
-   - Copy **Project URL**
-   - Copy **anon public** key
-
 ## Step 3: Configure Backend
 
 ```bash
@@ -97,10 +93,6 @@ cp .env.example .env
 Edit `.env` file:
 
 ```bash
-# Replace with your Supabase credentials
-VITE_SUPABASE_URL=https://xxxxxxxxxxxxx.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-
 # Backend API (should work as-is for local dev)
 VITE_API_BASE_URL=http://localhost:8080/api
 ```
@@ -135,17 +127,7 @@ Navigate to: **http://localhost:5173**
 You should see the application with:
 - Header: "Full Stack App - React + Spring Boot + Supabase"
 - Backend Status indicator
-- Authentication form
-
-### Test Authentication
-
-1. Click **Sign Up**
-2. Enter:
-   - Email: `test@example.com`
-   - Password: Choose a password (min 6 characters)
-3. Click **Sign Up** button
-
-If successful, you'll see the Items management interface!
+- Items management interface
 
 ### Test CRUD Operations
 
@@ -207,16 +189,6 @@ Supabase PostgreSQL Database
 1. Make sure backend is running on port 8080
 2. Check `VITE_API_BASE_URL` in frontend/.env
 3. Restart both backend and frontend
-
-### Issue: Authentication not working
-
-**Error:** `Invalid API key` or authentication fails
-
-**Solution:**
-1. Verify `VITE_SUPABASE_URL` is correct
-2. Check `VITE_SUPABASE_ANON_KEY` is the anon public key
-3. Ensure Supabase project is active
-4. Check browser console for specific errors
 
 ### Issue: Port already in use
 

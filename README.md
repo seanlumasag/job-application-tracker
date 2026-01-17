@@ -17,7 +17,6 @@ Want to get started quickly? Check out our [Quick Start Guide](./QUICKSTART.md) 
 ### Frontend
 - **React 18** with TypeScript
 - **Vite** for fast development and building
-- **Supabase Client** for authentication and real-time features
 - **Axios** for API communication
 
 ### Backend
@@ -27,7 +26,8 @@ Want to get started quickly? Check out our [Quick Start Guide](./QUICKSTART.md) 
 - **Maven** for dependency management
 
 ### Database & Authentication
-- **Supabase** - PostgreSQL database with built-in authentication
+- **Supabase** - PostgreSQL database (accessed by the backend)
+- **Backend** - Handles authentication via API endpoints
 
 ## Project Structure
 
@@ -120,8 +120,6 @@ dev/
 
 4. Update `.env` with your configuration:
    ```
-   VITE_SUPABASE_URL=https://xxxxxxxxxxxxx.supabase.co
-   VITE_SUPABASE_ANON_KEY=your-anon-key
    VITE_API_BASE_URL=http://localhost:8080/api
    ```
 
@@ -147,9 +145,7 @@ dev/
 ## Features
 
 ### Authentication
-- User registration and login via Supabase Auth
-- Session management
-- Protected routes
+- Handled by backend API endpoints
 
 ### CRUD Operations
 - Create, Read, Update, Delete operations for items
@@ -199,7 +195,6 @@ The production build will be in the `frontend/dist` directory.
 
 ### Frontend Issues
 - **Cannot connect to backend**: Verify `VITE_API_BASE_URL` is correct
-- **Supabase errors**: Check your Supabase URL and anon key
 
 ## License
 
