@@ -6,20 +6,78 @@ The goal is to grow this deliberately in small, safe steps. Each milestone is a 
 
 ## Product Direction (Incremental)
 
-Start small and build toward a full system:
+Start small and build toward a full system with clear phases:
 
-1. **MVP: Applications + Basic CRUD**
-   - Store applications (company, role, link, notes)
-   - Simple list view with create/update/delete
-2. **Workflow Rules**
-   - Stages with valid transitions only
-   - Automatic timestamps + stage history
-3. **Tasks & Follow-ups**
-   - Due dates, overdue detection, "today/this week" views
-4. **Audit Log**
-   - Record key events (stage changes, task completion)
-5. **Contacts & Interactions**
-   - Recruiters/people and interaction notes
+1. **Phase 0 — Repo + Guardrails (Foundation)**
+   - Init backend project + tooling
+   - Env config + settings module (`DATABASE_URL`, `JWT_SECRET`, etc.)
+   - Docker Compose for Postgres + local dev
+   - DB migration framework + initial migration setup
+   - Lint/format + pre-commit hooks
+   - README with local setup + runbook
+2. **Phase 1 — Data Model (Schema-First, No Auth Yet)**
+   - Applications table (core fields + timestamps)
+   - Tasks table (`application_id` FK + `due_at` + status)
+   - Stage events table (`from_stage`/`to_stage` + note + actor)
+   - Constraints + enums for stage and task status
+   - Indexes for `due_at`, `stage`, `last_touch_at`, `user_id`
+   - Seed minimal dev data for local testing
+3. **Phase 2 — Auth + Ownership Enforcement (Non-Negotiable)**
+   - Users table + basic user model
+   - Signup + password hashing (or provider hookup if using Supabase Auth)
+   - Login endpoint returning JWT
+   - Auth middleware (extract/verify JWT)
+   - Row ownership enforcement (`user_id` scoped queries everywhere)
+   - Auth tests (invalid token, cross-user access blocked)
+4. **Phase 3 — Applications API (CRUD + Operational Fields)**
+   - Create application endpoint (defaults `stage=SAVED`, set `last_touch_at`)
+   - List applications endpoint (filter by stage, sort by `last_touch_at`)
+   - Update application endpoint (company/role/link/notes)
+   - Delete application endpoint (soft delete optional)
+   - "Stale" query support (older than N days)
+   - Applications API integration tests (owned rows only)
+5. **Phase 4 — Workflow Engine (State Machine + Audit Trail)**
+   - Stage enum + allowed transitions map
+   - Transition endpoint (`PATCH /applications/:id/stage`)
+   - Validate transitions server-side (reject invalid jumps)
+   - Write `stage_events` row on every stage change
+   - Auto-update `last_touch_at` + `stage_changed_at` on transitions
+   - Workflow tests (valid transitions pass, invalid fail, audit created)
+6. **Phase 5 — Tasks & Follow-ups (Operational Layer)**
+   - Create task for application (title, `due_at`, notes)
+   - List tasks for application endpoint
+   - Mark task done/undone + `completed_at` timestamps
+   - Global "due today / this week / overdue" endpoints
+   - Task reminders metadata (`snooze_until` or `follow_up_after`)
+   - Task query tests (timezone-safe due windows, overdue correctness)
+7. **Phase 6 — Audit Log as a First-Class Feature**
+   - Generic `audit_events` table (type, entity, payload JSON)
+   - Emit audit event on stage transition
+   - Emit audit event on task create/complete
+   - Audit feed endpoint (latest events, pagination)
+   - Correlation/request ID logging to tie actions to events
+   - Audit feed tests (ordering + ownership enforcement)
+8. **Phase 7 — Dashboards (The "Product" Endpoints)**
+   - Dashboard summary endpoint (counts by stage + overdue tasks)
+   - Stale applications endpoint (no touch > N days)
+   - "Next actions" endpoint (tasks due soon + apps needing follow-up)
+   - Activity endpoint (last 7/30 days transitions + completions)
+   - Optimize dashboard queries (indexes + explain + tune)
+   - Dashboard snapshot tests (stable aggregates)
+9. **Phase 8 — Hardening (Real-World Backend Work)**
+   - Consistent error format + global exception handler
+   - Input validation + request schemas (reject garbage early)
+   - Rate limit auth + sensitive endpoints
+   - CORS config + security headers
+   - Structured logging + healthcheck + metrics endpoint
+   - End-to-end test suite (SAVED → OFFER happy path)
+10. **Phase 9 — Deploy (Proof It Runs Outside Your Laptop)**
+   - Production config (envs, DB SSL, JWT rotation plan)
+   - Migration run step in startup pipeline
+   - Deploy backend (Render/Railway/Fly) + managed Postgres
+   - CI pipeline (lint, tests, migrations check)
+   - Seed/admin script for your own account
+   - Deployment guide + API docs (OpenAPI/Swagger)
 
 Each step is implemented fully before moving to the next.
 
