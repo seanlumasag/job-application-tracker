@@ -1,6 +1,7 @@
 package com.dev.backend.repository;
 
 import com.dev.backend.model.Application;
+import com.dev.backend.model.Stage;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,7 @@ class ApplicationRepositoryTest {
     private TestEntityManager entityManager;
 
     @Test
-    void persistSetsTimestamps() {
+    void persistSetsDefaultsAndTimestamps() {
         Application application = new Application();
         application.setCompany("Acme");
         application.setRole("Engineer");
@@ -26,6 +27,8 @@ class ApplicationRepositoryTest {
         assertThat(saved.getId()).isNotNull();
         assertThat(saved.getCreatedAt()).isNotNull();
         assertThat(saved.getUpdatedAt()).isNotNull();
+        assertThat(saved.getStage()).isEqualTo(Stage.SAVED);
+        assertThat(saved.getLastTouchAt()).isNotNull();
     }
 
     @Test
@@ -42,5 +45,6 @@ class ApplicationRepositoryTest {
 
         assertThat(updated.getCreatedAt()).isEqualTo(createdAt);
         assertThat(updated.getUpdatedAt()).isAfterOrEqualTo(initialUpdatedAt);
+        assertThat(updated.getLastTouchAt()).isNotNull();
     }
 }

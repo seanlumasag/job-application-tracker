@@ -1,0 +1,20 @@
+INSERT INTO applications (id, company, role, job_url, location, notes, stage, last_touch_at, user_id, created_at, updated_at)
+VALUES
+    (1, 'Acme', 'Backend Engineer', 'https://example.com/jobs/1', 'Remote', 'Referred by Sam', 'SAVED', now(), 1, now(), now()),
+    (2, 'Beta Corp', 'Full Stack Developer', 'https://example.com/jobs/2', 'New York, NY', 'Applied via LinkedIn', 'APPLIED', now(), 1, now(), now())
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO tasks (id, application_id, title, status, due_at, notes, created_at, updated_at)
+VALUES
+    (1, 1, 'Follow up with recruiter', 'OPEN', now() + interval '2 days', 'Send a short follow-up email', now(), now()),
+    (2, 2, 'Prep for phone screen', 'OPEN', now() + interval '4 days', 'Review role requirements', now(), now())
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO stage_events (id, application_id, from_stage, to_stage, note, actor, created_at)
+VALUES
+    (1, 2, 'SAVED', 'APPLIED', 'Submitted application', 'system', now())
+ON CONFLICT (id) DO NOTHING;
+
+SELECT setval('applications_id_seq', (SELECT COALESCE(MAX(id), 1) FROM applications));
+SELECT setval('tasks_id_seq', (SELECT COALESCE(MAX(id), 1) FROM tasks));
+SELECT setval('stage_events_id_seq', (SELECT COALESCE(MAX(id), 1) FROM stage_events));

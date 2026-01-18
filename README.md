@@ -2,26 +2,24 @@
 
 A backend-first internal tool for managing a job search as an operations workflow, built with **React**, **Spring Boot**, and **Supabase**.
 
-The goal is to grow this deliberately in small, safe steps. Each milestone is a real, usable slice that adds one core capability at a time.
 
 ## Product Direction (Incremental)
 
-Start small and build toward a full system with clear phases:
 
 1. **Phase 0 — Repo + Guardrails (Foundation)**
-   - Init backend project + tooling
-   - Env config + settings module (`DATABASE_URL`, `JWT_SECRET`, etc.)
-   - Docker Compose for Postgres + local dev
-   - DB migration framework + initial migration setup
-   - Lint/format + pre-commit hooks
-   - README with local setup + runbook
+   - X Init backend project + tooling
+   - X Env config + settings module (`DATABASE_URL`, `JWT_SECRET`, etc.)
+   - X Docker Compose for Postgres + local dev
+   - X DB migration framework + initial migration setup
+   - X Lint/format + pre-commit hooks
+   - X README with local setup + runbook
 2. **Phase 1 — Data Model (Schema-First, No Auth Yet)**
-   - Applications table (core fields + timestamps)
-   - Tasks table (`application_id` FK + `due_at` + status)
-   - Stage events table (`from_stage`/`to_stage` + note + actor)
-   - Constraints + enums for stage and task status
-   - Indexes for `due_at`, `stage`, `last_touch_at`, `user_id`
-   - Seed minimal dev data for local testing
+   - X Applications table (core fields + timestamps)
+   - X Tasks table (`application_id` FK + `due_at` + status)
+   - X Stage events table (`from_stage`/`to_stage` + note + actor)
+   - X Constraints + enums for stage and task status
+   - X Indexes for `due_at`, `stage`, `last_touch_at`, `user_id`
+   - X Seed minimal dev data for local testing
 3. **Phase 2 — Auth + Ownership Enforcement (Non-Negotiable)**
    - Users table + basic user model
    - Signup + password hashing (or provider hookup if using Supabase Auth)
@@ -79,7 +77,6 @@ Start small and build toward a full system with clear phases:
    - Seed/admin script for your own account
    - Deployment guide + API docs (OpenAPI/Swagger)
 
-Each step is implemented fully before moving to the next.
 
 ## 🚀 Quick Start
 

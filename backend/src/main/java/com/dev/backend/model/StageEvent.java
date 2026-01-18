@@ -7,11 +7,9 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
-import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
@@ -19,16 +17,11 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(
-        name = "tasks",
-        indexes = {
-                @Index(name = "idx_tasks_due_at", columnList = "due_at")
-        }
-)
+@Table(name = "stage_events")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Task {
+public class StageEvent {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -38,36 +31,25 @@ public class Task {
     @JoinColumn(name = "application_id", nullable = false)
     private Application application;
 
-    @Column(nullable = false)
-    private String title;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "from_stage", nullable = false)
+    private Stage fromStage;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private TaskStatus status;
-
-    @Column(name = "due_at")
-    private LocalDateTime dueAt;
+    @Column(name = "to_stage", nullable = false)
+    private Stage toStage;
 
     @Column(length = 2000)
-    private String notes;
+    private String note;
+
+    @Column(length = 255)
+    private String actor;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
-
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-        if (status == null) {
-            status = TaskStatus.OPEN;
-        }
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
     }
 }
