@@ -1,8 +1,12 @@
 package com.dev.backend.service;
 
 import com.dev.backend.model.User;
+import com.dev.backend.security.AuthenticatedUser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
@@ -36,6 +40,24 @@ public class JwtService {
                 .setExpiration(Date.from(expiresAt))
                 .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public AuthenticatedUser parseToken(String token) {
+        try {
+            Jws<Claims> claims = Jwts.parserBuilder()
+                    .setSigningKey(signingKey)
+                    .build()
+                    .parseClaimsJws(token);
+            String subject = claims.getBody().getSubject();
+            if (subject == null || subject.isBlank()) {
+                throw new JwtException("Missing subject");
+            }
+            Long userId = Long.valueOf(subject);
+            String email = claims.getBody().get("email", String.class);
+            return new AuthenticatedUser(userId, email);
+        } catch (JwtException | IllegalArgumentException ex) {
+            throw new JwtException("Invalid token", ex);
+        }
     }
 
     private byte[] normalizeSecret(String secret) {

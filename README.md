@@ -21,9 +21,9 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X Indexes for `due_at`, `stage`, `last_touch_at`, `user_id`
    - X Seed minimal dev data for local testing
 3. **Phase 2 — Auth + Ownership Enforcement (Non-Negotiable)**
-   - Users table + basic user model
-   - Signup + password hashing (or provider hookup if using Supabase Auth)
-   - Login endpoint returning JWT
+   - X Users table + basic user model
+   - X Signup + password hashing (or provider hookup if using Supabase Auth)
+   - X Login endpoint returning JWT
    - Auth middleware (extract/verify JWT)
    - Row ownership enforcement (`user_id` scoped queries everywhere)
    - Auth tests (invalid token, cross-user access blocked)
@@ -76,6 +76,48 @@ A backend-first internal tool for managing a job search as an operations workflo
    - CI pipeline (lint, tests, migrations check)
    - Seed/admin script for your own account
    - Deployment guide + API docs (OpenAPI/Swagger)
+
+## Frontend Product Direction (Incremental)
+
+1. **Phase 0 — UI Foundation**
+   - X Vite + React + TypeScript setup
+   - X Basic routing/layout shell
+   - X API client wiring + env config
+2. **Phase 1 — Core Views (Read-Only)**
+   - Dashboard summary cards (counts by stage + overdue tasks)
+   - Applications list (stage filter + sort by last touch)
+   - Application detail page (notes + history sections)
+3. **Phase 2 — Auth UX**
+   - Signup + login screens
+   - Store JWT securely (memory + refresh on reload)
+   - Guarded routes + logout flow
+4. **Phase 3 — CRUD Flows**
+   - Create application form
+   - Edit application fields + notes
+   - Delete (or archive) application action
+5. **Phase 4 — Workflow UI**
+   - Stage transition controls with validation messages
+   - Stage history timeline (stage events)
+   - Auto-update last touch indicator
+6. **Phase 5 — Tasks & Follow-ups**
+   - Create/edit tasks for application
+   - Task list filters (due today/this week/overdue)
+   - Mark done/undone with optimistic updates
+7. **Phase 6 — Audit & Activity**
+   - Activity feed (latest transitions + task events)
+   - Detail view per event (actor + note)
+8. **Phase 7 — Dashboards (Product UI)**
+   - Stale applications view
+   - Next actions panel (tasks due soon + apps needing follow-up)
+   - Activity trends (7/30 days)
+9. **Phase 8 — Hardening**
+   - Form validation + error states
+   - Empty states + skeleton loading
+   - Performance tuning for large lists
+10. **Phase 9 — Release**
+   - Build + deploy frontend
+   - CI checks (lint + tests)
+   - UI docs + basic usage guide
 
 
 ## 🚀 Quick Start
