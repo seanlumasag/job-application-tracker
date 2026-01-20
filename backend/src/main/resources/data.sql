@@ -1,3 +1,8 @@
+INSERT INTO users (id, email, password_hash, created_at, updated_at)
+VALUES
+    (1, 'demo@example.com', '$2a$10$7EqJtq98hPqEX7fNZaFWoO5T0C5Ul9kY01/1i/8uRIXV4Yg8Zb9oS', now(), now())
+ON CONFLICT (id) DO NOTHING;
+
 INSERT INTO applications (id, company, role, job_url, location, notes, stage, last_touch_at, user_id, created_at, updated_at)
 VALUES
     (1, 'Acme', 'Backend Engineer', 'https://example.com/jobs/1', 'Remote', 'Referred by Sam', 'SAVED', now(), 1, now(), now()),
@@ -18,3 +23,4 @@ ON CONFLICT (id) DO NOTHING;
 SELECT setval('applications_id_seq', (SELECT COALESCE(MAX(id), 1) FROM applications));
 SELECT setval('tasks_id_seq', (SELECT COALESCE(MAX(id), 1) FROM tasks));
 SELECT setval('stage_events_id_seq', (SELECT COALESCE(MAX(id), 1) FROM stage_events));
+SELECT setval('users_id_seq', (SELECT COALESCE(MAX(id), 1) FROM users));
