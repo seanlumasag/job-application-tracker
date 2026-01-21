@@ -5,6 +5,8 @@ import com.dev.backend.model.Application;
 import com.dev.backend.model.Stage;
 import com.dev.backend.repository.ApplicationRepository;
 import java.time.LocalDateTime;
+import java.util.List;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -27,5 +29,13 @@ public class ApplicationService {
         application.setLastTouchAt(LocalDateTime.now());
         application.setUserId(userId);
         return applicationRepository.save(application);
+    }
+
+    public List<Application> list(Long userId, Stage stage) {
+        Sort sort = Sort.by(Sort.Direction.DESC, "lastTouchAt");
+        if (stage == null) {
+            return applicationRepository.findAllByUserId(userId, sort);
+        }
+        return applicationRepository.findAllByUserIdAndStage(userId, stage, sort);
     }
 }
