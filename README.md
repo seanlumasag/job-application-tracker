@@ -28,9 +28,9 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X Auth tests (invalid token, cross-user access blocked)
 4. **Phase 3 — Applications API (CRUD + Operational Fields)**
    - X Create application endpoint (defaults `stage=SAVED`, set `last_touch_at`)
-   - List applications endpoint (filter by stage, sort by `last_touch_at`)
-   - Update application endpoint (company/role/link/notes)
-   - Delete application endpoint (soft delete optional)
+   - X List applications endpoint (filter by stage, sort by `last_touch_at`)
+   - X Update application endpoint (company/role/link/notes)
+   - X Delete application endpoint (soft delete optional)
    - "Stale" query support (older than N days)
    - Applications API integration tests (owned rows only)
 5. **Phase 4 — Workflow Engine (State Machine + Audit Trail)**
@@ -119,32 +119,91 @@ A backend-first internal tool for managing a job search as an operations workflo
    - UI docs + basic usage guide
 
 
-## 🚀 Quick Start
+## Quick Start
 
-Want to get started quickly? Check out our [Quick Start Guide](./QUICKSTART.md) to have the app running in less than 10 minutes!
+Get running fast with the Make targets:
 
-## 📚 Documentation
+```bash
+make backend-setup
+make backend-run
+make frontend-setup
+make frontend-run
+```
 
-- **[Quick Start Guide](./QUICKSTART.md)** - Get running in under 10 minutes
-- **[Architecture Overview](./ARCHITECTURE.md)** - Technical architecture and design
-- **[Deployment Guide](./DEPLOYMENT.md)** - Production deployment instructions
+For a guided walkthrough, see [QUICKSTART.md](./QUICKSTART.md).
+
+## Documentation
+
+- [Quick Start Guide](./QUICKSTART.md)
+- [Architecture Overview](./ARCHITECTURE.md)
+- [Deployment Guide](./DEPLOYMENT.md)
+
+## Prerequisites
+
+- Java 17+
+- Maven 3.6+
+- Node.js 18+ and npm
+- Supabase account
+
+## Configuration
+
+### Supabase
+1. Create a project at [Supabase](https://supabase.com)
+2. Copy database connection details from **Project Settings > Database**
+
+### Backend
+1. `cd backend`
+2. `cp .env.example .env`
+3. Set:
+   ```
+   SUPABASE_DB_URL=jdbc:postgresql://db.xxxxxxxxxxxxx.supabase.co:5432/postgres
+   SUPABASE_DB_USERNAME=postgres
+   SUPABASE_DB_PASSWORD=your-database-password
+   ```
+4. Run: `make backend-run`
+
+### Frontend
+1. `cd frontend`
+2. `cp .env.example .env`
+3. Set:
+   ```
+   VITE_API_BASE_URL=http://localhost:8080/api
+   ```
+4. Run: `make frontend-run`
+
+## Make Targets
+
+- `make backend-setup` install backend dependencies
+- `make backend-run` run backend dev server
+- `make backend-test` run backend tests
+- `make backend-build` build backend jar
+- `make frontend-setup` install frontend dependencies
+- `make frontend-run` run frontend dev server
+- `make frontend-lint` lint frontend
+- `make frontend-build` build frontend
+
+## API Endpoints
+
+- `GET /api/health`
+- `POST /api/auth/signup`
+- `POST /api/auth/login`
+- `GET /api/me`
+- `GET /api/applications`
+- `POST /api/applications`
+- `PUT /api/applications/{id}`
+- `DELETE /api/applications/{id}`
 
 ## Tech Stack
 
 ### Frontend
-- **React 18** with TypeScript
-- **Vite** for fast development and building
-- **Axios** for API communication
+- React 18 + TypeScript
+- Vite
+- Axios
 
 ### Backend
-- **Spring Boot 3.2.1** with Java 17
-- **Spring Data JPA** for database operations
-- **PostgreSQL** driver for Supabase connection
-- **Maven** for dependency management
-
-### Database & Authentication
-- **Supabase** - PostgreSQL database (accessed by the backend)
-- **Backend** - Handles authentication via API endpoints
+- Spring Boot 3.2.1 (Java 17)
+- Spring Data JPA
+- PostgreSQL (Supabase)
 
 ## Project Structure
 
@@ -174,205 +233,30 @@ dev/
     └── package.json
 ```
 
-## Prerequisites
+## Build & Test
 
-- **Java 17** or higher
-- **Maven 3.6+**
-- **Node.js 18+** and npm
-- **Supabase Account** - [Sign up here](https://supabase.com)
-
-## Setup Instructions
-
-### 1. Supabase Setup
-
-1. Create a new project on [Supabase](https://supabase.com)
-2. Go to **Project Settings > Database**
-3. Note down your database connection details
-4. Go to **Project Settings > API**
-5. Copy your project URL and anon public key
-
-### 2. Backend Setup
-
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
-
-2. Create a `.env` file (copy from `.env.example`):
-   ```bash
-   cp .env.example .env
-   ```
-
-3. Update `.env` with your Supabase credentials:
-   ```
-   SUPABASE_DB_URL=jdbc:postgresql://db.xxxxxxxxxxxxx.supabase.co:5432/postgres
-   SUPABASE_DB_USERNAME=postgres
-   SUPABASE_DB_PASSWORD=your-database-password
-   ```
-
-4. Install dependencies and run:
-   ```bash
-   mvn clean install
-   mvn spring-boot:run
-   ```
-
-   The backend will start on `http://localhost:8080`
-
-### 3. Frontend Setup
-
-1. Navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Create a `.env` file (copy from `.env.example`):
-   ```bash
-   cp .env.example .env
-   ```
-
-4. Update `.env` with your configuration:
-   ```
-   VITE_API_BASE_URL=http://localhost:8080/api
-   ```
-
-5. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-   The frontend will start on `http://localhost:5173`
-
-## API Endpoints
-
-### Health Check
-- `GET /api/health` - Check backend status
-
-### Items CRUD
-- `GET /api/items` - Get all items
-- `GET /api/items/{id}` - Get item by ID
-- `POST /api/items` - Create new item
-- `PUT /api/items/{id}` - Update item
-- `DELETE /api/items/{id}` - Delete item
-
-## Features
-
-### Current
-- Basic items CRUD for API + UI scaffolding
-- Backend connectivity checks
-
-### Planned (Incremental)
-1. **Applications**
-   - `applications` table + REST endpoints
-2. **Stage Workflow**
-   - Valid transitions + stage events
-3. **Tasks**
-   - Task creation, due dates, completion
-4. **Audit Log**
-   - Event history for key actions
-5. **Contacts & Interactions**
-   - People + interaction logging
-
-### Authentication
-- Will be handled by backend API endpoints (JWT)
-
-### CRUD Operations
-- Create, Read, Update, Delete operations for items
-- Real-time updates
-- RESTful API design
-
-### Database
-- PostgreSQL database through Supabase
-- Automatic schema migrations with Spring Data JPA
-- Connection pooling and optimization
-
-## Building for Production
-
-### Backend
 ```bash
-cd backend
-mvn clean package
-java -jar target/backend-0.0.1-SNAPSHOT.jar
+make backend-test
+make backend-build
+make frontend-lint
+make frontend-build
 ```
-
-### Frontend
-```bash
-cd frontend
-npm run build
-```
-
-The production build will be in the `frontend/dist` directory.
-
-## Development
-
-### Backend Development
-- Hot reload is enabled with Spring Boot DevTools
-- Run tests: `mvn test`
-- Check code style: Configure with your preferred linter
-
-### Frontend Development
-- Hot Module Replacement (HMR) enabled
-- Run linter: `npm run lint`
-- Build for production: `npm run build`
-- Preview production build: `npm run preview`
 
 ## Troubleshooting
 
-### Backend Issues
-- **Connection refused**: Ensure Supabase database credentials are correct
-- **Port already in use**: Change port in `application.properties`
-
-### Frontend Issues
-- **Cannot connect to backend**: Verify `VITE_API_BASE_URL` is correct
+- Connection refused: verify Supabase credentials and backend port.
+- Cannot connect to backend: confirm `VITE_API_BASE_URL`.
 
 ## License
 
-This project is open source and available under the MIT License.
+MIT
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Learn More
-
-- **[React Documentation](https://react.dev/)**
-- **[Spring Boot Documentation](https://spring.io/projects/spring-boot)**
-- **[Supabase Documentation](https://supabase.com/docs)**
-- **[Vite Documentation](https://vitejs.dev/)**
-- **[TypeScript Documentation](https://www.typescriptlang.org/)**
-
-## Project Structure
-
-```
-dev/
-├── backend/              # Spring Boot backend
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/     # Java source code
-│   │   │   └── resources/ # Configuration
-│   │   └── test/         # Tests
-│   └── pom.xml           # Maven config
-│
-├── frontend/             # React frontend
-│   ├── src/
-│   │   ├── components/   # React components
-│   │   ├── services/     # API services
-│   │   ├── lib/          # Utilities
-│   │   └── types/        # TypeScript types
-│   └── package.json      # npm config
-│
-├── QUICKSTART.md         # Quick start guide
-├── ARCHITECTURE.md       # Architecture docs
-└── DEPLOYMENT.md         # Deployment guide
-```
+Pull requests welcome.
 
 ## Support
 
-For detailed information:
-- Setup issues: See [QUICKSTART.md](./QUICKSTART.md)
-- Architecture questions: See [ARCHITECTURE.md](./ARCHITECTURE.md)
-- Deployment help: See [DEPLOYMENT.md](./DEPLOYMENT.md)
+- Setup: [QUICKSTART.md](./QUICKSTART.md)
+- Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md)
+- Deployment: [DEPLOYMENT.md](./DEPLOYMENT.md)
