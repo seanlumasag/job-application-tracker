@@ -3,8 +3,7 @@
 A backend-first internal tool for managing a job search as an operations workflow, built with **React**, **Spring Boot**, and **Supabase**.
 
 
-## Product Direction (Incremental)
-
+## Backend Product Direction (Incremental)
 
 1. **Phase 0 — Repo + Guardrails (Foundation)**
    - X Init backend project + tooling
@@ -24,9 +23,9 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X Users table + basic user model
    - X Signup + password hashing (or provider hookup if using Supabase Auth)
    - X Login endpoint returning JWT
-   - Auth middleware (extract/verify JWT)
-   - Row ownership enforcement (`user_id` scoped queries everywhere)
-   - Auth tests (invalid token, cross-user access blocked)
+   - X Auth middleware (extract/verify JWT)
+   - X Row ownership enforcement (`user_id` scoped queries everywhere)
+   - X Auth tests (invalid token, cross-user access blocked)
 4. **Phase 3 — Applications API (CRUD + Operational Fields)**
    - Create application endpoint (defaults `stage=SAVED`, set `last_touch_at`)
    - List applications endpoint (filter by stage, sort by `last_touch_at`)
