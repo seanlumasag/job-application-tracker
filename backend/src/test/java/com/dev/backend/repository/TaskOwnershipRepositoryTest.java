@@ -38,4 +38,35 @@ class TaskOwnershipRepositoryTest {
         assertThat(taskRepository.findByIdAndApplicationUserId(task.getId(), 400L)).isEmpty();
         assertThat(taskRepository.findByIdAndApplicationUserId(task.getId(), 300L)).isPresent();
     }
+
+    @Test
+    void findAllByApplicationUserIdReturnsOnlyOwnedRows() {
+        Application ownerApp = new Application();
+        ownerApp.setCompany("OwnerCo");
+        ownerApp.setRole("Engineer");
+        ownerApp.setUserId(301L);
+        entityManager.persist(ownerApp);
+
+        Task ownerTask = new Task();
+        ownerTask.setApplication(ownerApp);
+        ownerTask.setTitle("Owner Task");
+        entityManager.persist(ownerTask);
+
+        Application otherApp = new Application();
+        otherApp.setCompany("OtherCo");
+        otherApp.setRole("Analyst");
+        otherApp.setUserId(302L);
+        entityManager.persist(otherApp);
+
+        Task otherTask = new Task();
+        otherTask.setApplication(otherApp);
+        otherTask.setTitle("Other Task");
+        entityManager.persist(otherTask);
+
+        entityManager.flush();
+
+        assertThat(taskRepository.findAllByApplicationUserId(301L))
+                .extracting(Task::getId)
+                .containsExactly(ownerTask.getId());
+    }
 }

@@ -40,4 +40,37 @@ class StageEventOwnershipRepositoryTest {
         assertThat(stageEventRepository.findByIdAndApplicationUserId(event.getId(), 600L)).isEmpty();
         assertThat(stageEventRepository.findByIdAndApplicationUserId(event.getId(), 500L)).isPresent();
     }
+
+    @Test
+    void findAllByApplicationUserIdReturnsOnlyOwnedRows() {
+        Application ownerApp = new Application();
+        ownerApp.setCompany("OwnerCo");
+        ownerApp.setRole("Engineer");
+        ownerApp.setUserId(501L);
+        entityManager.persist(ownerApp);
+
+        StageEvent ownerEvent = new StageEvent();
+        ownerEvent.setApplication(ownerApp);
+        ownerEvent.setFromStage(Stage.SAVED);
+        ownerEvent.setToStage(Stage.APPLIED);
+        entityManager.persist(ownerEvent);
+
+        Application otherApp = new Application();
+        otherApp.setCompany("OtherCo");
+        otherApp.setRole("Analyst");
+        otherApp.setUserId(502L);
+        entityManager.persist(otherApp);
+
+        StageEvent otherEvent = new StageEvent();
+        otherEvent.setApplication(otherApp);
+        otherEvent.setFromStage(Stage.SAVED);
+        otherEvent.setToStage(Stage.APPLIED);
+        entityManager.persist(otherEvent);
+
+        entityManager.flush();
+
+        assertThat(stageEventRepository.findAllByApplicationUserId(501L))
+                .extracting(StageEvent::getId)
+                .containsExactly(ownerEvent.getId());
+    }
 }

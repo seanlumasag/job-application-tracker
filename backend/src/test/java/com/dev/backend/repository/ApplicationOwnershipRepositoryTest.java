@@ -34,4 +34,25 @@ class ApplicationOwnershipRepositoryTest {
         assertThat(applicationRepository.findByIdAndUserId(ownerApp.getId(), 200L)).isEmpty();
         assertThat(applicationRepository.findByIdAndUserId(ownerApp.getId(), 100L)).isPresent();
     }
+
+    @Test
+    void findAllByUserIdReturnsOnlyOwnedRows() {
+        Application ownerApp = new Application();
+        ownerApp.setCompany("OwnerCo");
+        ownerApp.setRole("Engineer");
+        ownerApp.setUserId(101L);
+        entityManager.persist(ownerApp);
+
+        Application otherApp = new Application();
+        otherApp.setCompany("OtherCo");
+        otherApp.setRole("Analyst");
+        otherApp.setUserId(202L);
+        entityManager.persist(otherApp);
+
+        entityManager.flush();
+
+        assertThat(applicationRepository.findAllByUserId(101L))
+                .extracting(Application::getId)
+                .containsExactly(ownerApp.getId());
+    }
 }
