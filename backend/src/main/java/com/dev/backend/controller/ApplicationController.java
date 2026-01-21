@@ -8,6 +8,7 @@ import com.dev.backend.security.JwtAuthFilter;
 import com.dev.backend.service.ApplicationService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
@@ -22,8 +23,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.validation.annotation.Validated;
 
 @RestController
+@Validated
 @RequestMapping("/api/applications")
 public class ApplicationController {
 
@@ -56,6 +59,20 @@ public class ApplicationController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         return applicationService.list(userId, stage).stream()
+                .map(ApplicationResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/stale")
+    public List<ApplicationResponse> listStale(
+            @RequestParam(name = "days") @Min(1) int days,
+            HttpServletRequest servletRequest
+    ) {
+        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+        return applicationService.listStale(userId, days).stream()
                 .map(ApplicationResponse::from)
                 .collect(Collectors.toList());
     }

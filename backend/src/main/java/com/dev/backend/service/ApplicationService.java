@@ -42,6 +42,12 @@ public class ApplicationService {
         return applicationRepository.findAllByUserIdAndStage(userId, stage, sort);
     }
 
+    public List<Application> listStale(Long userId, int days) {
+        LocalDateTime cutoff = LocalDateTime.now().minusDays(days);
+        Sort sort = Sort.by(Sort.Direction.ASC, "lastTouchAt");
+        return applicationRepository.findAllByUserIdAndLastTouchAtBefore(userId, cutoff, sort);
+    }
+
     public Application update(Long userId, Long applicationId, ApplicationUpdateRequest request) {
         Application application = applicationRepository.findByIdAndUserId(applicationId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
