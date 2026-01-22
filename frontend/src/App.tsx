@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { apiClient } from './lib/apiClient';
 import { applicationService } from './services/applicationService';
+import { authService } from './services/authService';
 import { dashboardService } from './services/dashboardService';
 import type {
   Application,
+  AuthResponse,
   DashboardActivityResponse,
   DashboardNextActionsResponse,
   DashboardSummaryResponse,
@@ -15,6 +17,7 @@ import './App.css';
 const STAGES: Stage[] = ['SAVED', 'APPLIED', 'INTERVIEW', 'OFFER', 'REJECTED', 'WITHDRAWN'];
 
 type ViewKey = 'dashboard' | 'applications' | 'detail';
+type AuthMode = 'login' | 'signup';
 
 function App() {
   const [token, setToken] = useState(() => localStorage.getItem('jat.token') ?? '');
@@ -27,6 +30,10 @@ function App() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [authMode, setAuthMode] = useState<AuthMode>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authBusy, setAuthBusy] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -72,6 +79,27 @@ function App() {
       setError(message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const submitAuth = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setAuthBusy(true);
+    setError('');
+    try {
+      const response: AuthResponse =
+        authMode === 'signup'
+          ? await authService.signup(email, password)
+          : await authService.login(email, password);
+      setToken(response.token);
+      setEmail('');
+      setPassword('');
+      setView('dashboard');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Authentication failed';
+      setError(message);
+    } finally {
+      setAuthBusy(false);
     }
   };
 
@@ -157,7 +185,59 @@ function App() {
       </nav>
 
       <main className="app-main">
-        {view === 'dashboard' && (
+        {!token && (
+          <section className="panel auth-panel">
+            <div className="panel-header">
+              <div>
+                <h2>{authMode === 'signup' ? 'Create your account' : 'Welcome back'}</h2>
+                <p>Sign in to sync with your backend data.</p>
+              </div>
+              <div className="auth-toggle">
+                <button
+                  type="button"
+                  className={authMode === 'login' ? 'active' : ''}
+                  onClick={() => setAuthMode('login')}
+                >
+                  Log in
+                </button>
+                <button
+                  type="button"
+                  className={authMode === 'signup' ? 'active' : ''}
+                  onClick={() => setAuthMode('signup')}
+                >
+                  Sign up
+                </button>
+              </div>
+            </div>
+            <form className="auth-form" onSubmit={submitAuth}>
+              <label>
+                Email
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  placeholder="you@company.com"
+                  required
+                />
+              </label>
+              <label>
+                Password
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  minLength={8}
+                  required
+                />
+              </label>
+              <button type="submit" className="primary" disabled={authBusy}>
+                {authBusy ? 'Working…' : authMode === 'signup' ? 'Create account' : 'Log in'}
+              </button>
+            </form>
+          </section>
+        )}
+
+        {token && view === 'dashboard' && (
           <section className="dashboard-grid">
             <div className="panel summary-panel">
               <div className="panel-header">
@@ -244,7 +324,7 @@ function App() {
           </section>
         )}
 
-        {view === 'applications' && (
+        {token && view === 'applications' && (
           <section className="panel">
             <div className="panel-header">
               <h2>Applications</h2>
@@ -295,7 +375,7 @@ function App() {
           </section>
         )}
 
-        {view === 'detail' && selectedApp && (
+        {token && view === 'detail' && selectedApp && (
           <section className="panel detail-panel">
             <div className="panel-header">
               <div>
