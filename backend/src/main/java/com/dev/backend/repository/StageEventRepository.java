@@ -8,4 +8,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface StageEventRepository extends JpaRepository<StageEvent, Long> {
     Optional<StageEvent> findByIdAndApplicationUserId(Long id, Long userId);
     List<StageEvent> findAllByApplicationUserId(Long userId);
+    List<StageEvent> findAllByApplicationUserIdAndCreatedAtBetween(
+            Long userId,
+            java.time.LocalDateTime start,
+            java.time.LocalDateTime end
+    );
 }

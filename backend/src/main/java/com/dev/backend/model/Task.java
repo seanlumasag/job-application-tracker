@@ -22,7 +22,10 @@ import lombok.NoArgsConstructor;
 @Table(
         name = "tasks",
         indexes = {
-                @Index(name = "idx_tasks_due_at", columnList = "due_at")
+                @Index(name = "idx_tasks_due_at", columnList = "due_at"),
+                @Index(name = "idx_tasks_status_due_at", columnList = "status, due_at"),
+                @Index(name = "idx_tasks_completed_at", columnList = "completed_at"),
+                @Index(name = "idx_tasks_application_id", columnList = "application_id")
         }
 )
 @Data

@@ -54,17 +54,13 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X Audit feed endpoint (latest events, pagination)
    - X Correlation/request ID logging to tie actions to events
    - X Audit feed tests (ordering + ownership enforcement)
-
-Add audit events, feed endpoint, and request correlation logging
-
-
 8. **Phase 7 — Dashboards (The "Product" Endpoints)**
-   - Dashboard summary endpoint (counts by stage + overdue tasks)
-   - Stale applications endpoint (no touch > N days)
-   - "Next actions" endpoint (tasks due soon + apps needing follow-up)
-   - Activity endpoint (last 7/30 days transitions + completions)
-   - Optimize dashboard queries (indexes + explain + tune)
-   - Dashboard snapshot tests (stable aggregates)
+   - X Dashboard summary endpoint (counts by stage + overdue tasks)
+   - X Stale applications endpoint (no touch > N days)
+   - X "Next actions" endpoint (tasks due soon + apps needing follow-up)
+   - X Activity endpoint (last 7/30 days transitions + completions)
+   - X Optimize dashboard queries (indexes + explain + tune)
+   - X Dashboard snapshot tests (stable aggregates)
 9. **Phase 8 — Hardening (Real-World Backend Work)**
    - Consistent error format + global exception handler
    - Input validation + request schemas (reject garbage early)
@@ -204,6 +200,10 @@ For a guided walkthrough, see [QUICKSTART.md](./QUICKSTART.md).
 - `GET /api/tasks/due/week`
 - `GET /api/tasks/overdue`
 - `GET /api/audit-events`
+- `GET /api/dashboard/summary`
+- `GET /api/dashboard/stale`
+- `GET /api/dashboard/next-actions`
+- `GET /api/dashboard/activity`
 
 ## Tech Stack
 

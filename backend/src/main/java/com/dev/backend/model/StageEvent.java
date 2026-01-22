@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
@@ -17,7 +18,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "stage_events")
+@Table(
+        name = "stage_events",
+        indexes = {
+                @Index(name = "idx_stage_events_application_id", columnList = "application_id"),
+                @Index(name = "idx_stage_events_created_at", columnList = "created_at")
+        }
+)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -50,6 +57,8 @@ public class StageEvent {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
     }
 }

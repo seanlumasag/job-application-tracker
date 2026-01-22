@@ -27,4 +27,8 @@ public enum Stage {
         }
         return ALLOWED_TRANSITIONS.getOrDefault(this, EnumSet.noneOf(Stage.class)).contains(next);
     }
+
+    public boolean isTerminal() {
+        return this == REJECTED || this == WITHDRAWN;
+    }
 }
