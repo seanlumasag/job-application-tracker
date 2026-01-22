@@ -62,12 +62,12 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X Optimize dashboard queries (indexes + explain + tune)
    - X Dashboard snapshot tests (stable aggregates)
 9. **Phase 8 — Hardening (Real-World Backend Work)**
-   - Consistent error format + global exception handler
-   - Input validation + request schemas (reject garbage early)
-   - Rate limit auth + sensitive endpoints
-   - CORS config + security headers
-   - Structured logging + healthcheck + metrics endpoint
-   - End-to-end test suite (SAVED → OFFER happy path)
+   - X Consistent error format + global exception handler
+   - X Input validation + request schemas (reject garbage early)
+   - X Rate limit auth + sensitive endpoints
+   - X CORS config + security headers
+   - X Structured logging + healthcheck + metrics endpoint
+   - X End-to-end test suite (SAVED → OFFER happy path)
 10. **Phase 9 — Deploy (Proof It Runs Outside Your Laptop)**
    - Production config (envs, DB SSL, JWT rotation plan)
    - Migration run step in startup pipeline
@@ -185,6 +185,7 @@ For a guided walkthrough, see [QUICKSTART.md](./QUICKSTART.md).
 ## API Endpoints
 
 - `GET /api/health`
+- `GET /api/metrics`
 - `POST /api/auth/signup`
 - `POST /api/auth/login`
 - `GET /api/me`
