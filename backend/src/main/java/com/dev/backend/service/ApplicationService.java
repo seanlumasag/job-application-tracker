@@ -4,21 +4,26 @@ import com.dev.backend.dto.ApplicationCreateRequest;
 import com.dev.backend.dto.ApplicationUpdateRequest;
 import com.dev.backend.model.Application;
 import com.dev.backend.model.Stage;
+import com.dev.backend.model.StageEvent;
 import com.dev.backend.repository.ApplicationRepository;
+import com.dev.backend.repository.StageEventRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
+    private final StageEventRepository stageEventRepository;
 
-    public ApplicationService(ApplicationRepository applicationRepository) {
+    public ApplicationService(ApplicationRepository applicationRepository, StageEventRepository stageEventRepository) {
         this.applicationRepository = applicationRepository;
+        this.stageEventRepository = stageEventRepository;
     }
 
     public Application create(Long userId, ApplicationCreateRequest request) {
@@ -65,6 +70,7 @@ public class ApplicationService {
         applicationRepository.delete(application);
     }
 
+    @Transactional
     public Application transitionStage(Long userId, Long applicationId, Stage nextStage) {
         Application application = applicationRepository.findByIdAndUserId(applicationId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
@@ -75,7 +81,19 @@ public class ApplicationService {
         if (!currentStage.canTransitionTo(nextStage)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid stage transition");
         }
+        LocalDateTime now = LocalDateTime.now();
         application.setStage(nextStage);
-        return applicationRepository.save(application);
+        application.setLastTouchAt(now);
+        application.setStageChangedAt(now);
+        Application saved = applicationRepository.save(application);
+
+        StageEvent event = new StageEvent();
+        event.setApplication(saved);
+        event.setFromStage(currentStage);
+        event.setToStage(nextStage);
+        event.setActor("user:" + userId);
+        stageEventRepository.save(event);
+
+        return saved;
     }
 }

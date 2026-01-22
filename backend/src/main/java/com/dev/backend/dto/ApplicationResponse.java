@@ -17,6 +17,7 @@ public class ApplicationResponse {
     private String notes;
     private Stage stage;
     private LocalDateTime lastTouchAt;
+    private LocalDateTime stageChangedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -30,6 +31,7 @@ public class ApplicationResponse {
                 application.getNotes(),
                 application.getStage(),
                 application.getLastTouchAt(),
+                application.getStageChangedAt(),
                 application.getCreatedAt(),
                 application.getUpdatedAt()
         );

@@ -3,12 +3,15 @@ package com.dev.backend.controller;
 import com.dev.backend.dto.ApplicationUpdateRequest;
 import com.dev.backend.model.Application;
 import com.dev.backend.model.Stage;
+import com.dev.backend.model.StageEvent;
 import com.dev.backend.model.User;
 import com.dev.backend.repository.ApplicationRepository;
+import com.dev.backend.repository.StageEventRepository;
 import com.dev.backend.repository.UserRepository;
 import com.dev.backend.service.JwtService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,8 +25,10 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -48,6 +53,9 @@ class ApplicationControllerTest {
 
     @Autowired
     private ApplicationRepository applicationRepository;
+
+    @Autowired
+    private StageEventRepository stageEventRepository;
 
     @Test
     void listApplicationsReturnsOnlyOwnedRows() throws Exception {
@@ -295,6 +303,63 @@ class ApplicationControllerTest {
                         .param("days", "0")
                         .header(HttpHeaders.AUTHORIZATION, bearerToken(owner)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void stageTransitionCreatesEventAndUpdatesTimestamps() throws Exception {
+        User owner = createUser("stage-event@example.com");
+        Application application = createApplication(owner.getId(), "EventCo", "Engineer");
+        LocalDateTime originalLastTouch = application.getLastTouchAt();
+        LocalDateTime originalStageChangedAt = application.getStageChangedAt();
+
+        String payload = """
+                {
+                  "stage": "APPLIED"
+                }
+                """;
+
+        mockMvc.perform(patch("/api/applications/{id}/stage", application.getId())
+                        .header(HttpHeaders.AUTHORIZATION, bearerToken(owner))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.stage", is("APPLIED")))
+                .andExpect(jsonPath("$.lastTouchAt", notNullValue()))
+                .andExpect(jsonPath("$.stageChangedAt", notNullValue()));
+
+        Application updated = applicationRepository.findById(application.getId()).orElseThrow();
+        assertThat(updated.getLastTouchAt()).isAfter(originalLastTouch);
+        assertThat(updated.getStageChangedAt()).isAfter(originalStageChangedAt);
+
+        List<StageEvent> events = stageEventRepository.findAllByApplicationUserId(owner.getId());
+        assertThat(events).hasSize(1);
+        StageEvent event = events.get(0);
+        assertThat(event.getFromStage()).isEqualTo(Stage.SAVED);
+        assertThat(event.getToStage()).isEqualTo(Stage.APPLIED);
+    }
+
+    @Test
+    void stageTransitionRejectsInvalidJump() throws Exception {
+        User owner = createUser("stage-invalid-jump@example.com");
+        Application application = createApplication(owner.getId(), "BadJumpCo", "Engineer");
+        application.setStage(Stage.REJECTED);
+        applicationRepository.save(application);
+
+        String payload = """
+                {
+                  "stage": "OFFER"
+                }
+                """;
+
+        mockMvc.perform(patch("/api/applications/{id}/stage", application.getId())
+                        .header(HttpHeaders.AUTHORIZATION, bearerToken(owner))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(payload))
+                .andExpect(status().isBadRequest());
+
+        Application unchanged = applicationRepository.findById(application.getId()).orElseThrow();
+        assertThat(unchanged.getStage()).isEqualTo(Stage.REJECTED);
+        assertThat(stageEventRepository.findAllByApplicationUserId(owner.getId())).isEmpty();
     }
 
     private User createUser(String email) {

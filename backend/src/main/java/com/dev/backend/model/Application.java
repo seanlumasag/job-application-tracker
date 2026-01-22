@@ -55,6 +55,9 @@ public class Application {
     @Column(name = "last_touch_at", nullable = false)
     private LocalDateTime lastTouchAt;
 
+    @Column(name = "stage_changed_at", nullable = false)
+    private LocalDateTime stageChangedAt;
+
     @Column(name = "user_id")
     private Long userId;
 
@@ -73,6 +76,9 @@ public class Application {
         }
         if (lastTouchAt == null) {
             lastTouchAt = createdAt;
+        }
+        if (stageChangedAt == null) {
+            stageChangedAt = createdAt;
         }
     }
 

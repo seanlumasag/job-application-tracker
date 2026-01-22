@@ -3,10 +3,10 @@ VALUES
     (1, 'demo@example.com', '$2a$10$7EqJtq98hPqEX7fNZaFWoO5T0C5Ul9kY01/1i/8uRIXV4Yg8Zb9oS', now(), now())
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO applications (id, company, role, job_url, location, notes, stage, last_touch_at, user_id, created_at, updated_at)
+INSERT INTO applications (id, company, role, job_url, location, notes, stage, last_touch_at, stage_changed_at, user_id, created_at, updated_at)
 VALUES
-    (1, 'Acme', 'Backend Engineer', 'https://example.com/jobs/1', 'Remote', 'Referred by Sam', 'SAVED', now(), 1, now(), now()),
-    (2, 'Beta Corp', 'Full Stack Developer', 'https://example.com/jobs/2', 'New York, NY', 'Applied via LinkedIn', 'APPLIED', now(), 1, now(), now())
+    (1, 'Acme', 'Backend Engineer', 'https://example.com/jobs/1', 'Remote', 'Referred by Sam', 'SAVED', now(), now(), 1, now(), now()),
+    (2, 'Beta Corp', 'Full Stack Developer', 'https://example.com/jobs/2', 'New York, NY', 'Applied via LinkedIn', 'APPLIED', now(), now(), 1, now(), now())
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO tasks (id, application_id, title, status, due_at, notes, created_at, updated_at)

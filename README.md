@@ -34,12 +34,12 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X "Stale" query support (older than N days)
    - X Applications API integration tests (owned rows only)
 5. **Phase 4 — Workflow Engine (State Machine + Audit Trail)**
-   - Stage enum + allowed transitions map
-   - Transition endpoint (`PATCH /applications/:id/stage`)
-   - Validate transitions server-side (reject invalid jumps)
-   - Write `stage_events` row on every stage change
-   - Auto-update `last_touch_at` + `stage_changed_at` on transitions
-   - Workflow tests (valid transitions pass, invalid fail, audit created)
+   - X Stage enum + allowed transitions map
+   - X Transition endpoint (`PATCH /applications/:id/stage`)
+   - X Validate transitions server-side (reject invalid jumps)
+   - X Write `stage_events` row on every stage change
+   - X Auto-update `last_touch_at` + `stage_changed_at` on transitions
+   - X Workflow tests (valid transitions pass, invalid fail, audit created)
 6. **Phase 5 — Tasks & Follow-ups (Operational Layer)**
    - Create task for application (title, `due_at`, notes)
    - List tasks for application endpoint
