@@ -83,9 +83,9 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X Basic routing/layout shell
    - X API client wiring + env config
 2. **Phase 1 — Core Views (Read-Only)**
-   - Dashboard summary cards (counts by stage + overdue tasks)
-   - Applications list (stage filter + sort by last touch)
-   - Application detail page (notes + history sections)
+   - X Dashboard summary cards (counts by stage + overdue tasks)
+   - X Applications list (stage filter + sort by last touch)
+   - X Application detail page (notes + history sections)
 3. **Phase 2 — Auth UX**
    - Signup + login screens
    - Store JWT securely (memory + refresh on reload)
