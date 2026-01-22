@@ -88,8 +88,8 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X Application detail page (notes + history sections)
 3. **Phase 2 — Auth UX**
    - X Signup + login screens
-   - Store JWT securely (memory + refresh on reload)
-   - Guarded routes + logout flow
+   - X Store JWT securely (memory + refresh on reload)
+   - X Guarded routes + logout flow
 4. **Phase 3 — CRUD Flows**
    - Create application form
    - Edit application fields + notes

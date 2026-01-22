@@ -20,7 +20,7 @@ type ViewKey = 'dashboard' | 'applications' | 'detail';
 type AuthMode = 'login' | 'signup';
 
 function App() {
-  const [token, setToken] = useState(() => localStorage.getItem('jat.token') ?? '');
+  const [token, setToken] = useState(() => sessionStorage.getItem('jat.token') ?? '');
   const [view, setView] = useState<ViewKey>('dashboard');
   const [stageFilter, setStageFilter] = useState<Stage | 'ALL'>('ALL');
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
@@ -38,10 +38,10 @@ function App() {
   useEffect(() => {
     if (token) {
       apiClient.defaults.headers.common.Authorization = `Bearer ${token}`;
-      localStorage.setItem('jat.token', token);
+      sessionStorage.setItem('jat.token', token);
     } else {
       delete apiClient.defaults.headers.common.Authorization;
-      localStorage.removeItem('jat.token');
+      sessionStorage.removeItem('jat.token');
     }
   }, [token]);
 
@@ -103,6 +103,13 @@ function App() {
     }
   };
 
+  const handleLogout = () => {
+    setToken('');
+    setSelectedApp(null);
+    setView('dashboard');
+    setStageFilter('ALL');
+  };
+
   const refreshApplications = async () => {
     setLoading(true);
     try {
@@ -149,9 +156,16 @@ function App() {
             value={token}
             onChange={(event) => setToken(event.target.value)}
           />
-          <button type="button" className="ghost" onClick={() => setToken('')}>
-            Clear
-          </button>
+          <div className="token-actions">
+            <button type="button" className="ghost" onClick={() => setToken('')}>
+              Clear
+            </button>
+            {token && (
+              <button type="button" className="ghost" onClick={handleLogout}>
+                Log out
+              </button>
+            )}
+          </div>
         </div>
       </header>
 
@@ -159,6 +173,7 @@ function App() {
         <button
           type="button"
           className={view === 'dashboard' ? 'active' : ''}
+          disabled={!token}
           onClick={() => setView('dashboard')}
         >
           Dashboard
@@ -166,6 +181,7 @@ function App() {
         <button
           type="button"
           className={view === 'applications' ? 'active' : ''}
+          disabled={!token}
           onClick={() => setView('applications')}
         >
           Applications
@@ -174,6 +190,7 @@ function App() {
           <button
             type="button"
             className={view === 'detail' ? 'active' : ''}
+            disabled={!token}
             onClick={() => setView('detail')}
           >
             Detail
