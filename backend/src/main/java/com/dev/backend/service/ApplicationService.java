@@ -20,10 +20,16 @@ public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
     private final StageEventRepository stageEventRepository;
+    private final AuditService auditService;
 
-    public ApplicationService(ApplicationRepository applicationRepository, StageEventRepository stageEventRepository) {
+    public ApplicationService(
+            ApplicationRepository applicationRepository,
+            StageEventRepository stageEventRepository,
+            AuditService auditService
+    ) {
         this.applicationRepository = applicationRepository;
         this.stageEventRepository = stageEventRepository;
+        this.auditService = auditService;
     }
 
     public Application create(Long userId, ApplicationCreateRequest request) {
@@ -93,6 +99,17 @@ public class ApplicationService {
         event.setToStage(nextStage);
         event.setActor("user:" + userId);
         stageEventRepository.save(event);
+
+        auditService.record(
+                userId,
+                "application.stage_changed",
+                "application",
+                saved.getId(),
+                java.util.Map.of(
+                        "fromStage", currentStage,
+                        "toStage", nextStage
+                )
+        );
 
         return saved;
     }

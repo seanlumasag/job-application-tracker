@@ -48,12 +48,16 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X Task reminders metadata (`snooze_until` or `follow_up_after`)
    - X Task query tests (timezone-safe due windows, overdue correctness)
 7. **Phase 6 — Audit Log as a First-Class Feature**
-   - Generic `audit_events` table (type, entity, payload JSON)
-   - Emit audit event on stage transition
-   - Emit audit event on task create/complete
-   - Audit feed endpoint (latest events, pagination)
-   - Correlation/request ID logging to tie actions to events
-   - Audit feed tests (ordering + ownership enforcement)
+   - X Generic `audit_events` table (type, entity, payload JSON)
+   - X Emit audit event on stage transition
+   - X Emit audit event on task create/complete
+   - X Audit feed endpoint (latest events, pagination)
+   - X Correlation/request ID logging to tie actions to events
+   - X Audit feed tests (ordering + ownership enforcement)
+
+Add audit events, feed endpoint, and request correlation logging
+
+
 8. **Phase 7 — Dashboards (The "Product" Endpoints)**
    - Dashboard summary endpoint (counts by stage + overdue tasks)
    - Stale applications endpoint (no touch > N days)
@@ -199,6 +203,7 @@ For a guided walkthrough, see [QUICKSTART.md](./QUICKSTART.md).
 - `GET /api/tasks/due/today`
 - `GET /api/tasks/due/week`
 - `GET /api/tasks/overdue`
+- `GET /api/audit-events`
 
 ## Tech Stack
 

@@ -20,10 +20,16 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final ApplicationRepository applicationRepository;
+    private final AuditService auditService;
 
-    public TaskService(TaskRepository taskRepository, ApplicationRepository applicationRepository) {
+    public TaskService(
+            TaskRepository taskRepository,
+            ApplicationRepository applicationRepository,
+            AuditService auditService
+    ) {
         this.taskRepository = taskRepository;
         this.applicationRepository = applicationRepository;
+        this.auditService = auditService;
     }
 
     public Task create(Long userId, Long applicationId, TaskCreateRequest request) {
@@ -36,7 +42,19 @@ public class TaskService {
         task.setSnoozeUntil(request.getSnoozeUntil());
         task.setNotes(request.getNotes());
         task.setStatus(TaskStatus.OPEN);
-        return taskRepository.save(task);
+        Task saved = taskRepository.save(task);
+        java.util.Map<String, Object> payload = new java.util.HashMap<>();
+        payload.put("applicationId", applicationId);
+        payload.put("title", saved.getTitle());
+        payload.put("dueAt", saved.getDueAt());
+        auditService.record(
+                userId,
+                "task.created",
+                "task",
+                saved.getId(),
+                payload
+        );
+        return saved;
     }
 
     public List<Task> listForApplication(Long userId, Long applicationId) {
@@ -50,13 +68,27 @@ public class TaskService {
     public Task updateStatus(Long userId, Long taskId, TaskStatus status) {
         Task task = taskRepository.findByIdAndApplicationUserId(taskId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
+        TaskStatus previousStatus = task.getStatus();
         task.setStatus(status);
         if (status == TaskStatus.DONE) {
             task.setCompletedAt(LocalDateTime.now());
         } else {
             task.setCompletedAt(null);
         }
-        return taskRepository.save(task);
+        Task saved = taskRepository.save(task);
+        if (status == TaskStatus.DONE && previousStatus != TaskStatus.DONE) {
+            auditService.record(
+                    userId,
+                    "task.completed",
+                    "task",
+                    saved.getId(),
+                    java.util.Map.of(
+                            "applicationId", saved.getApplication().getId(),
+                            "completedAt", saved.getCompletedAt()
+                    )
+            );
+        }
+        return saved;
     }
 
     public List<Task> listDueToday(Long userId) {
