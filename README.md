@@ -193,6 +193,9 @@ For a guided walkthrough, see [QUICKSTART.md](./QUICKSTART.md).
 - `PUT /api/applications/{id}`
 - `PATCH /api/applications/{id}/stage`
 - `DELETE /api/applications/{id}`
+- `POST /api/applications/{id}/tasks`
+- `GET /api/applications/{id}/tasks`
+- `PATCH /api/tasks/{id}/status`
 
 ## Tech Stack
 

@@ -51,6 +51,9 @@ public class Task {
     @Column(length = 2000)
     private String notes;
 
+    @Column(name = "completed_at")
+    private LocalDateTime completedAt;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
