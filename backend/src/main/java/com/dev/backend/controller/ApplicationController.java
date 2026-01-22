@@ -2,6 +2,7 @@ package com.dev.backend.controller;
 
 import com.dev.backend.dto.ApplicationCreateRequest;
 import com.dev.backend.dto.ApplicationResponse;
+import com.dev.backend.dto.ApplicationStageUpdateRequest;
 import com.dev.backend.dto.ApplicationUpdateRequest;
 import com.dev.backend.model.Stage;
 import com.dev.backend.security.JwtAuthFilter;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -88,6 +90,19 @@ public class ApplicationController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         return ApplicationResponse.from(applicationService.update(userId, id, request));
+    }
+
+    @PatchMapping("/{id}/stage")
+    public ApplicationResponse updateStage(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody ApplicationStageUpdateRequest request,
+            HttpServletRequest servletRequest
+    ) {
+        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+        return ApplicationResponse.from(applicationService.transitionStage(userId, id, request.getStage()));
     }
 
     @DeleteMapping("/{id}")

@@ -32,7 +32,7 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X Update application endpoint (company/role/link/notes)
    - X Delete application endpoint (soft delete optional)
    - X "Stale" query support (older than N days)
-   - Applications API integration tests (owned rows only)
+   - X Applications API integration tests (owned rows only)
 5. **Phase 4 — Workflow Engine (State Machine + Audit Trail)**
    - Stage enum + allowed transitions map
    - Transition endpoint (`PATCH /applications/:id/stage`)
@@ -191,6 +191,7 @@ For a guided walkthrough, see [QUICKSTART.md](./QUICKSTART.md).
 - `GET /api/applications`
 - `POST /api/applications`
 - `PUT /api/applications/{id}`
+- `PATCH /api/applications/{id}/stage`
 - `DELETE /api/applications/{id}`
 
 ## Tech Stack

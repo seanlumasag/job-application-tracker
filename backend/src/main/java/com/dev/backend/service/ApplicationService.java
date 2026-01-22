@@ -64,4 +64,18 @@ public class ApplicationService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
         applicationRepository.delete(application);
     }
+
+    public Application transitionStage(Long userId, Long applicationId, Stage nextStage) {
+        Application application = applicationRepository.findByIdAndUserId(applicationId, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
+        Stage currentStage = application.getStage();
+        if (currentStage == nextStage) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Stage is already set");
+        }
+        if (!currentStage.canTransitionTo(nextStage)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid stage transition");
+        }
+        application.setStage(nextStage);
+        return applicationRepository.save(application);
+    }
 }
