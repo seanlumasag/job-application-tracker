@@ -8,6 +8,9 @@ import com.dev.backend.repository.ApplicationRepository;
 import com.dev.backend.repository.TaskRepository;
 import com.dev.backend.repository.UserRepository;
 import com.dev.backend.service.JwtService;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.WeekFields;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -159,6 +162,103 @@ class TaskControllerTest {
 
         Task reopened = taskRepository.findById(task.getId()).orElseThrow();
         assertThat(reopened.getCompletedAt()).isNull();
+    }
+
+    @Test
+    void dueTodayReturnsOnlyOpenUnsnoozedTasks() throws Exception {
+        User owner = createUser("task-due-today@example.com");
+        Application application = createApplication(owner.getId(), "DueTodayCo", "Engineer");
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+
+        Task dueToday = new Task();
+        dueToday.setApplication(application);
+        dueToday.setTitle("Due today");
+        dueToday.setStatus(TaskStatus.OPEN);
+        dueToday.setDueAt(startOfDay.plusHours(9));
+        taskRepository.save(dueToday);
+
+        Task snoozed = new Task();
+        snoozed.setApplication(application);
+        snoozed.setTitle("Snoozed today");
+        snoozed.setStatus(TaskStatus.OPEN);
+        snoozed.setDueAt(startOfDay.plusHours(10));
+        snoozed.setSnoozeUntil(LocalDateTime.now().plusDays(1));
+        taskRepository.save(snoozed);
+
+        Task doneToday = new Task();
+        doneToday.setApplication(application);
+        doneToday.setTitle("Done today");
+        doneToday.setStatus(TaskStatus.DONE);
+        doneToday.setDueAt(startOfDay.plusHours(8));
+        taskRepository.save(doneToday);
+
+        Task dueTomorrow = new Task();
+        dueTomorrow.setApplication(application);
+        dueTomorrow.setTitle("Due tomorrow");
+        dueTomorrow.setStatus(TaskStatus.OPEN);
+        dueTomorrow.setDueAt(startOfDay.plusDays(1).plusHours(1));
+        taskRepository.save(dueTomorrow);
+
+        mockMvc.perform(get("/api/tasks/due/today")
+                        .header(HttpHeaders.AUTHORIZATION, bearerToken(owner)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].title", is("Due today")));
+    }
+
+    @Test
+    void dueThisWeekHonorsWeekWindow() throws Exception {
+        User owner = createUser("task-due-week@example.com");
+        Application application = createApplication(owner.getId(), "DueWeekCo", "Engineer");
+        LocalDate today = LocalDate.now();
+        LocalDate startOfWeek = today.with(WeekFields.ISO.dayOfWeek(), 1);
+
+        Task inWeek = new Task();
+        inWeek.setApplication(application);
+        inWeek.setTitle("In week");
+        inWeek.setStatus(TaskStatus.OPEN);
+        inWeek.setDueAt(startOfWeek.atStartOfDay().plusDays(2).plusHours(9));
+        taskRepository.save(inWeek);
+
+        Task nextWeek = new Task();
+        nextWeek.setApplication(application);
+        nextWeek.setTitle("Next week");
+        nextWeek.setStatus(TaskStatus.OPEN);
+        nextWeek.setDueAt(startOfWeek.atStartOfDay().plusWeeks(1).plusHours(1));
+        taskRepository.save(nextWeek);
+
+        mockMvc.perform(get("/api/tasks/due/week")
+                        .header(HttpHeaders.AUTHORIZATION, bearerToken(owner)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].title", is("In week")));
+    }
+
+    @Test
+    void overdueReturnsOnlyBeforeToday() throws Exception {
+        User owner = createUser("task-overdue@example.com");
+        Application application = createApplication(owner.getId(), "OverdueCo", "Engineer");
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+
+        Task overdue = new Task();
+        overdue.setApplication(application);
+        overdue.setTitle("Overdue");
+        overdue.setStatus(TaskStatus.OPEN);
+        overdue.setDueAt(startOfDay.minusHours(2));
+        taskRepository.save(overdue);
+
+        Task today = new Task();
+        today.setApplication(application);
+        today.setTitle("Today");
+        today.setStatus(TaskStatus.OPEN);
+        today.setDueAt(startOfDay.plusHours(1));
+        taskRepository.save(today);
+
+        mockMvc.perform(get("/api/tasks/overdue")
+                        .header(HttpHeaders.AUTHORIZATION, bearerToken(owner)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].title", is("Overdue")));
     }
 
     private User createUser(String email) {

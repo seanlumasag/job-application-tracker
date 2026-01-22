@@ -70,4 +70,37 @@ public class TaskController {
         }
         return TaskResponse.from(taskService.updateStatus(userId, id, request.getStatus()));
     }
+
+    @GetMapping("/tasks/due/today")
+    public List<TaskResponse> listDueToday(HttpServletRequest servletRequest) {
+        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+        return taskService.listDueToday(userId).stream()
+                .map(TaskResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/tasks/due/week")
+    public List<TaskResponse> listDueThisWeek(HttpServletRequest servletRequest) {
+        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+        return taskService.listDueThisWeek(userId).stream()
+                .map(TaskResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/tasks/overdue")
+    public List<TaskResponse> listOverdue(HttpServletRequest servletRequest) {
+        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+        return taskService.listOverdue(userId).stream()
+                .map(TaskResponse::from)
+                .collect(Collectors.toList());
+    }
 }

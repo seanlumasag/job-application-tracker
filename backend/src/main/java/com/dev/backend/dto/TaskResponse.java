@@ -14,6 +14,7 @@ public class TaskResponse {
     private String title;
     private TaskStatus status;
     private LocalDateTime dueAt;
+    private LocalDateTime snoozeUntil;
     private String notes;
     private LocalDateTime completedAt;
     private LocalDateTime createdAt;
@@ -26,6 +27,7 @@ public class TaskResponse {
                 task.getTitle(),
                 task.getStatus(),
                 task.getDueAt(),
+                task.getSnoozeUntil(),
                 task.getNotes(),
                 task.getCompletedAt(),
                 task.getCreatedAt(),

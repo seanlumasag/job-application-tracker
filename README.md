@@ -41,12 +41,12 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X Auto-update `last_touch_at` + `stage_changed_at` on transitions
    - X Workflow tests (valid transitions pass, invalid fail, audit created)
 6. **Phase 5 — Tasks & Follow-ups (Operational Layer)**
-   - Create task for application (title, `due_at`, notes)
-   - List tasks for application endpoint
-   - Mark task done/undone + `completed_at` timestamps
-   - Global "due today / this week / overdue" endpoints
-   - Task reminders metadata (`snooze_until` or `follow_up_after`)
-   - Task query tests (timezone-safe due windows, overdue correctness)
+   - X Create task for application (title, `due_at`, notes)
+   - X List tasks for application endpoint
+   - X Mark task done/undone + `completed_at` timestamps
+   - X Global "due today / this week / overdue" endpoints
+   - X Task reminders metadata (`snooze_until` or `follow_up_after`)
+   - X Task query tests (timezone-safe due windows, overdue correctness)
 7. **Phase 6 — Audit Log as a First-Class Feature**
    - Generic `audit_events` table (type, entity, payload JSON)
    - Emit audit event on stage transition
@@ -196,6 +196,9 @@ For a guided walkthrough, see [QUICKSTART.md](./QUICKSTART.md).
 - `POST /api/applications/{id}/tasks`
 - `GET /api/applications/{id}/tasks`
 - `PATCH /api/tasks/{id}/status`
+- `GET /api/tasks/due/today`
+- `GET /api/tasks/due/week`
+- `GET /api/tasks/overdue`
 
 ## Tech Stack
 

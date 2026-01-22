@@ -13,6 +13,8 @@ public class TaskCreateRequest {
 
     private LocalDateTime dueAt;
 
+    private LocalDateTime snoozeUntil;
+
     @Size(max = 2000)
     private String notes;
 }

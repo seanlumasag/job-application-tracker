@@ -48,6 +48,9 @@ public class Task {
     @Column(name = "due_at")
     private LocalDateTime dueAt;
 
+    @Column(name = "snooze_until")
+    private LocalDateTime snoozeUntil;
+
     @Column(length = 2000)
     private String notes;
 

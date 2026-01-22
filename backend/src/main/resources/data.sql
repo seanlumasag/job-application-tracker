@@ -9,10 +9,10 @@ VALUES
     (2, 'Beta Corp', 'Full Stack Developer', 'https://example.com/jobs/2', 'New York, NY', 'Applied via LinkedIn', 'APPLIED', now(), now(), 1, now(), now())
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO tasks (id, application_id, title, status, due_at, notes, completed_at, created_at, updated_at)
+INSERT INTO tasks (id, application_id, title, status, due_at, snooze_until, notes, completed_at, created_at, updated_at)
 VALUES
-    (1, 1, 'Follow up with recruiter', 'OPEN', now() + interval '2 days', 'Send a short follow-up email', null, now(), now()),
-    (2, 2, 'Prep for phone screen', 'OPEN', now() + interval '4 days', 'Review role requirements', null, now(), now())
+    (1, 1, 'Follow up with recruiter', 'OPEN', now() + interval '2 days', null, 'Send a short follow-up email', null, now(), now()),
+    (2, 2, 'Prep for phone screen', 'OPEN', now() + interval '4 days', null, 'Review role requirements', null, now(), now())
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO stage_events (id, application_id, from_stage, to_stage, note, actor, created_at)
