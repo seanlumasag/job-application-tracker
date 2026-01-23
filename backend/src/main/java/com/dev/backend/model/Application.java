@@ -55,7 +55,7 @@ public class Application {
     @Column(name = "last_touch_at", nullable = false)
     private LocalDateTime lastTouchAt;
 
-    @Column(name = "stage_changed_at", nullable = false)
+    @Column(name = "stage_changed_at")
     private LocalDateTime stageChangedAt;
 
     @Column(name = "user_id")

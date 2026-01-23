@@ -9,6 +9,9 @@ VALUES
     (2, 'Beta Corp', 'Full Stack Developer', 'https://example.com/jobs/2', 'New York, NY', 'Applied via LinkedIn', 'APPLIED', now(), now(), 1, now(), now())
 ON CONFLICT (id) DO NOTHING;
 
+UPDATE applications
+SET stage_changed_at = COALESCE(stage_changed_at, created_at, last_touch_at, now());
+
 INSERT INTO tasks (id, application_id, title, status, due_at, snooze_until, notes, completed_at, created_at, updated_at)
 VALUES
     (1, 1, 'Follow up with recruiter', 'OPEN', now() + interval '2 days', null, 'Send a short follow-up email', null, now(), now()),
