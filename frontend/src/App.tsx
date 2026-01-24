@@ -57,6 +57,8 @@ function App() {
   const [summary, setSummary] = useState<DashboardSummaryResponse | null>(null);
   const [nextActions, setNextActions] = useState<DashboardNextActionsResponse | null>(null);
   const [activity, setActivity] = useState<DashboardActivityResponse | null>(null);
+  const [activityWindow, setActivityWindow] = useState<7 | 30>(7);
+  const [nextActionsWindow, setNextActionsWindow] = useState<7 | 30>(7);
   const [applications, setApplications] = useState<Application[]>([]);
   const [createForm, setCreateForm] = useState<ApplicationPayload>(() => emptyApplicationPayload());
   const [editForm, setEditForm] = useState<ApplicationPayload>(() => emptyApplicationPayload());
@@ -81,6 +83,9 @@ function App() {
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
   const [selectedAuditEvent, setSelectedAuditEvent] = useState<AuditEvent | null>(null);
+  const [staleApplications, setStaleApplications] = useState<Application[]>([]);
+  const [staleDays, setStaleDays] = useState<number>(14);
+  const [staleLoading, setStaleLoading] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -97,6 +102,7 @@ function App() {
       setSummary(null);
       setNextActions(null);
       setActivity(null);
+      setStaleApplications([]);
       setApplications([]);
       setTasks([]);
       setAuditEvents([]);
@@ -105,9 +111,19 @@ function App() {
       setError('');
       return;
     }
+  loadAuditEvents();
+  loadStaleApplications(staleDays);
+}, [token]);
+
+  useEffect(() => {
+    if (!token) return;
     refreshDashboard();
-    loadAuditEvents();
-  }, [token]);
+  }, [token, nextActionsWindow, activityWindow]);
+
+  useEffect(() => {
+    if (!token) return;
+    loadStaleApplications(staleDays);
+  }, [token, staleDays]);
 
   useEffect(() => {
     if (!token) return;
@@ -140,8 +156,8 @@ function App() {
     try {
       const [summaryData, nextActionsData, activityData] = await Promise.all([
         dashboardService.summary(),
-        dashboardService.nextActions(7),
-        dashboardService.activity(7),
+        dashboardService.nextActions(nextActionsWindow),
+        dashboardService.activity(activityWindow),
       ]);
       setSummary(summaryData);
       setNextActions(nextActionsData);
@@ -253,6 +269,20 @@ function App() {
     }
   }
 
+  async function loadStaleApplications(days: number) {
+    setStaleLoading(true);
+    try {
+      const apps = await applicationService.listStale(days);
+      setStaleApplications(apps);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load stale applications';
+      setError(message);
+      setStaleApplications([]);
+    } finally {
+      setStaleLoading(false);
+    }
+  }
+
   const handleCreateChange = (field: keyof ApplicationPayload, value: string) => {
     setCreateForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -331,6 +361,7 @@ function App() {
       setSelectedApp(updated);
       setApplications((prev) => prev.map((app) => (app.id === updated.id ? updated : app)));
       await refreshApplications(stageFilter);
+      await loadStaleApplications(staleDays);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update application';
       setError(message);
@@ -380,6 +411,7 @@ function App() {
       setSelectedApp(null);
       setView('applications');
       await refreshApplications(stageFilter);
+      await loadStaleApplications(staleDays);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to delete application';
       setError(message);
@@ -409,6 +441,7 @@ function App() {
       await loadStageEvents(updated.id);
       await refreshApplications(stageFilter);
       await loadAuditEvents();
+      await loadStaleApplications(staleDays);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update stage';
       setError(message);
@@ -629,8 +662,22 @@ function App() {
 
             <div className="panel activity-panel">
               <div className="panel-header">
-                <h2>Activity pulse</h2>
-                <p>Transitions and completions over the last 7 days.</p>
+                <div>
+                  <h2>Activity pulse</h2>
+                  <p>Transitions and completions over the last {activityWindow} days.</p>
+                </div>
+                <div className="chip-group">
+                  {[7, 30].map((days) => (
+                    <button
+                      key={days}
+                      type="button"
+                      className={activityWindow === days ? 'ghost active' : 'ghost'}
+                      onClick={() => setActivityWindow(days as 7 | 30)}
+                    >
+                      {days}d
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="activity-list">
                 {activity?.items.map((item) => (
@@ -657,17 +704,28 @@ function App() {
             <div className="panel next-panel">
               <div className="panel-header">
                 <h2>Next actions</h2>
-                <p>Tasks due soon and stale applications.</p>
+                <div className="chip-group">
+                  {[7, 30].map((days) => (
+                    <button
+                      key={days}
+                      type="button"
+                      className={nextActionsWindow === days ? 'ghost active' : 'ghost'}
+                      onClick={() => setNextActionsWindow(days as 7 | 30)}
+                    >
+                      {days}d
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="next-columns">
                 <div>
-                  <h3>Due soon</h3>
+                  <h3>Due soon (next {nextActionsWindow}d)</h3>
                   {nextActions?.dueSoonTasks?.length ? (
                     nextActions.dueSoonTasks.map((task) => (
                       <TaskRow key={task.id} task={task} />
                     ))
                   ) : (
-                    <p className="empty">No due tasks in the next 7 days.</p>
+                    <p className="empty">No due tasks in the next {nextActionsWindow} days.</p>
                   )}
                 </div>
                 <div>
@@ -689,6 +747,52 @@ function App() {
                   )}
                 </div>
               </div>
+            </div>
+
+            <div className="panel stale-panel">
+              <div className="panel-header">
+                <div>
+                  <h2>Stale applications</h2>
+                  <p>Untouched for more than {staleDays} days.</p>
+                </div>
+                <div className="chip-group">
+                  {[7, 14, 30].map((days) => (
+                    <button
+                      key={days}
+                      type="button"
+                      className={staleDays === days ? 'ghost active' : 'ghost'}
+                      onClick={() => setStaleDays(days)}
+                    >
+                      {days}d+
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {staleLoading ? (
+                <p className="empty">Loading stale applications…</p>
+              ) : staleApplications.length ? (
+                <div className="stale-list">
+                  {staleApplications.map((app) => (
+                    <button
+                      key={app.id}
+                      type="button"
+                      className="application-row"
+                      onClick={() => showDetail(app)}
+                    >
+                      <div>
+                        <h3>{app.company}</h3>
+                        <p>{app.role}</p>
+                      </div>
+                      <div className="application-meta">
+                        <span>{app.stage}</span>
+                        <span>Last touch {formatRelative(app.lastTouchAt)}</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="empty">No stale applications 🎉</p>
+              )}
             </div>
 
             <div className="panel feed-panel">

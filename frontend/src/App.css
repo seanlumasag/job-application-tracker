@@ -525,6 +525,13 @@
   background: #fffdf8;
 }
 
+.chip-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
 .stage-card-header {
   display: flex;
   align-items: center;
@@ -688,6 +695,11 @@
 .task-actions {
   display: flex;
   align-items: center;
+}
+
+.stale-list {
+  display: grid;
+  gap: 12px;
 }
 
 .feed-panel {

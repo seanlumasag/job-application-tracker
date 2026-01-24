@@ -106,9 +106,9 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X Activity feed (latest transitions + task events)
    - X Detail view per event (actor + note)
 8. **Phase 7 — Dashboards (Product UI)**
-   - Stale applications view
-   - Next actions panel (tasks due soon + apps needing follow-up)
-   - Activity trends (7/30 days)
+   - X Stale applications view
+   - X Next actions panel (tasks due soon + apps needing follow-up)
+   - X Activity trends (7/30 days)
 9. **Phase 8 — Hardening**
    - Form validation + error states
    - Empty states + skeleton loading

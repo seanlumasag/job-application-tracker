@@ -17,6 +17,11 @@ export const applicationService = {
     return response.data;
   },
 
+  async listStale(days: number): Promise<Application[]> {
+    const response = await apiClient.get<Application[]>('/applications/stale', { params: { days } });
+    return response.data;
+  },
+
   async create(payload: ApplicationPayload): Promise<Application> {
     const response = await apiClient.post<Application>('/applications', payload);
     return response.data;
