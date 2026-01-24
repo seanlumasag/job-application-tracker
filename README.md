@@ -91,9 +91,9 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X Store JWT securely (memory + refresh on reload)
    - X Guarded routes + logout flow
 4. **Phase 3 — CRUD Flows**
-   - Create application form
-   - Edit application fields + notes
-   - Delete (or archive) application action
+   - X Create application form
+   - X Edit application fields + notes
+   - X Delete (or archive) application action
 5. **Phase 4 — Workflow UI**
    - Stage transition controls with validation messages
    - Stage history timeline (stage events)

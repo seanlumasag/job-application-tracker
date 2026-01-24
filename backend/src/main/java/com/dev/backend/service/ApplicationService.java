@@ -65,6 +65,7 @@ public class ApplicationService {
         application.setCompany(request.getCompany());
         application.setRole(request.getRole());
         application.setJobUrl(request.getJobUrl());
+        application.setLocation(request.getLocation());
         application.setNotes(request.getNotes());
         application.setLastTouchAt(LocalDateTime.now());
         return applicationRepository.save(application);

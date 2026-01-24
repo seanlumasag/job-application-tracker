@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { apiClient } from './lib/apiClient';
-import { applicationService } from './services/applicationService';
+import { applicationService, type ApplicationPayload } from './services/applicationService';
 import { authService } from './services/authService';
 import { dashboardService } from './services/dashboardService';
 import type {
@@ -16,6 +16,14 @@ import './App.css';
 
 const STAGES: Stage[] = ['SAVED', 'APPLIED', 'INTERVIEW', 'OFFER', 'REJECTED', 'WITHDRAWN'];
 
+const emptyApplicationPayload = (): ApplicationPayload => ({
+  company: '',
+  role: '',
+  jobUrl: '',
+  location: '',
+  notes: '',
+});
+
 type ViewKey = 'dashboard' | 'applications' | 'detail';
 type AuthMode = 'login' | 'signup';
 
@@ -28,12 +36,17 @@ function App() {
   const [nextActions, setNextActions] = useState<DashboardNextActionsResponse | null>(null);
   const [activity, setActivity] = useState<DashboardActivityResponse | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [createForm, setCreateForm] = useState<ApplicationPayload>(() => emptyApplicationPayload());
+  const [editForm, setEditForm] = useState<ApplicationPayload>(() => emptyApplicationPayload());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
+  const [createBusy, setCreateBusy] = useState(false);
+  const [updateBusy, setUpdateBusy] = useState(false);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -59,8 +72,22 @@ function App() {
 
   useEffect(() => {
     if (!token) return;
-    refreshApplications();
+    refreshApplications(stageFilter);
   }, [token, stageFilter]);
+
+  useEffect(() => {
+    if (!selectedApp) {
+      setEditForm(emptyApplicationPayload());
+      return;
+    }
+    setEditForm({
+      company: selectedApp.company,
+      role: selectedApp.role,
+      jobUrl: selectedApp.jobUrl ?? '',
+      location: selectedApp.location ?? '',
+      notes: selectedApp.notes ?? '',
+    });
+  }, [selectedApp]);
 
   const refreshDashboard = async () => {
     setLoading(true);
@@ -110,10 +137,10 @@ function App() {
     setStageFilter('ALL');
   };
 
-  const refreshApplications = async () => {
+  const refreshApplications = async (targetStage: Stage | 'ALL' = stageFilter) => {
     setLoading(true);
     try {
-      const apps = await applicationService.list(stageFilter === 'ALL' ? undefined : stageFilter);
+      const apps = await applicationService.list(targetStage === 'ALL' ? undefined : targetStage);
       setApplications(apps);
       if (selectedApp) {
         const updated = apps.find((app) => app.id === selectedApp.id) ?? null;
@@ -124,6 +151,95 @@ function App() {
       setError(message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const normalizePayload = (payload: ApplicationPayload): ApplicationPayload => ({
+    company: payload.company.trim(),
+    role: payload.role.trim(),
+    jobUrl: payload.jobUrl?.trim() || null,
+    location: payload.location?.trim() || null,
+    notes: payload.notes?.trim() || null,
+  });
+
+  const handleCreateChange = (field: keyof ApplicationPayload, value: string) => {
+    setCreateForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleEditChange = (field: keyof ApplicationPayload, value: string) => {
+    setEditForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const submitCreate = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!createForm.company.trim() || !createForm.role.trim()) {
+      setError('Company and role are required');
+      return;
+    }
+
+    setCreateBusy(true);
+    setError('');
+    try {
+      const payload = normalizePayload(createForm);
+      const created = await applicationService.create(payload);
+      setCreateForm(emptyApplicationPayload());
+      if (stageFilter === 'ALL') {
+        await refreshApplications('ALL');
+      } else {
+        setStageFilter('ALL');
+      }
+      setSelectedApp(created);
+      setView('detail');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to create application';
+      setError(message);
+    } finally {
+      setCreateBusy(false);
+    }
+  };
+
+  const submitUpdate = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!selectedApp) return;
+    if (!editForm.company.trim() || !editForm.role.trim()) {
+      setError('Company and role are required');
+      return;
+    }
+
+    setUpdateBusy(true);
+    setError('');
+    try {
+      const payload = normalizePayload(editForm);
+      const updated = await applicationService.update(selectedApp.id, payload);
+      setSelectedApp(updated);
+      setApplications((prev) => prev.map((app) => (app.id === updated.id ? updated : app)));
+      await refreshApplications(stageFilter);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update application';
+      setError(message);
+    } finally {
+      setUpdateBusy(false);
+    }
+  };
+
+  const deleteApplication = async () => {
+    if (!selectedApp) return;
+    const confirmed = window.confirm(`Delete application for ${selectedApp.company}?`);
+    if (!confirmed) return;
+
+    setDeleteBusy(true);
+    setError('');
+    try {
+      await applicationService.remove(selectedApp.id);
+      setApplications((prev) => prev.filter((app) => app.id !== selectedApp.id));
+      setSelectedApp(null);
+      setView('applications');
+      await refreshApplications(stageFilter);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to delete application';
+      setError(message);
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
@@ -344,9 +460,78 @@ function App() {
         {token && view === 'applications' && (
           <section className="panel">
             <div className="panel-header">
-              <h2>Applications</h2>
-              <p>Filter by stage and sort by last touch.</p>
+              <div>
+                <h2>Applications</h2>
+                <p>Create new records, filter by stage, and drill into details.</p>
+              </div>
+              <div className="header-actions">
+                <button
+                  type="button"
+                  className="ghost"
+                  onClick={() => refreshApplications()}
+                  disabled={loading}
+                >
+                  Refresh
+                </button>
+              </div>
             </div>
+            <form className="app-form" onSubmit={submitCreate}>
+              <div className="form-grid two-col">
+                <label className="field">
+                  <span>Company</span>
+                  <input
+                    type="text"
+                    value={createForm.company}
+                    onChange={(event) => handleCreateChange('company', event.target.value)}
+                    placeholder="Acme Corp"
+                    required
+                  />
+                </label>
+                <label className="field">
+                  <span>Role</span>
+                  <input
+                    type="text"
+                    value={createForm.role}
+                    onChange={(event) => handleCreateChange('role', event.target.value)}
+                    placeholder="Product Operations Lead"
+                    required
+                  />
+                </label>
+                <label className="field">
+                  <span>Location</span>
+                  <input
+                    type="text"
+                    value={createForm.location ?? ''}
+                    onChange={(event) => handleCreateChange('location', event.target.value)}
+                    placeholder="Remote / NYC"
+                  />
+                </label>
+                <label className="field">
+                  <span>Job URL</span>
+                  <input
+                    type="url"
+                    value={createForm.jobUrl ?? ''}
+                    onChange={(event) => handleCreateChange('jobUrl', event.target.value)}
+                    placeholder="https://company.com/job"
+                  />
+                </label>
+                <label className="field full">
+                  <span>Notes</span>
+                  <textarea
+                    rows={3}
+                    value={createForm.notes ?? ''}
+                    onChange={(event) => handleCreateChange('notes', event.target.value)}
+                    placeholder="Relevant context, recruiter, referral details, etc."
+                  />
+                </label>
+              </div>
+              <div className="form-actions">
+                <p className="muted">Creates in stage SAVED and stamps last touch now.</p>
+                <button type="submit" className="primary" disabled={createBusy}>
+                  {createBusy ? 'Adding…' : 'Add application'}
+                </button>
+              </div>
+            </form>
             <div className="filter-row">
               <button
                 type="button"
@@ -399,9 +584,19 @@ function App() {
                 <h2>{selectedApp.company}</h2>
                 <p>{selectedApp.role}</p>
               </div>
-              <button type="button" className="ghost" onClick={() => setView('applications')}>
-                Back to list
-              </button>
+              <div className="header-actions">
+                <button type="button" className="ghost" onClick={() => setView('applications')}>
+                  Back to list
+                </button>
+                <button
+                  type="button"
+                  className="ghost danger"
+                  onClick={deleteApplication}
+                  disabled={deleteBusy}
+                >
+                  {deleteBusy ? 'Deleting…' : 'Delete'}
+                </button>
+              </div>
             </div>
             <div className="detail-grid">
               <div className="detail-card">
@@ -429,10 +624,60 @@ function App() {
                   </div>
                 </dl>
               </div>
-              <div className="detail-card notes">
-                <h3>Notes</h3>
-                <p>{selectedApp.notes || 'No notes yet.'}</p>
-              </div>
+              <form className="detail-card form-card" onSubmit={submitUpdate}>
+                <h3>Edit fields + notes</h3>
+                <div className="form-grid two-col">
+                  <label className="field">
+                    <span>Company</span>
+                    <input
+                      type="text"
+                      value={editForm.company}
+                      onChange={(event) => handleEditChange('company', event.target.value)}
+                      required
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Role</span>
+                    <input
+                      type="text"
+                      value={editForm.role}
+                      onChange={(event) => handleEditChange('role', event.target.value)}
+                      required
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Location</span>
+                    <input
+                      type="text"
+                      value={editForm.location ?? ''}
+                      onChange={(event) => handleEditChange('location', event.target.value)}
+                    />
+                  </label>
+                  <label className="field">
+                    <span>Job URL</span>
+                    <input
+                      type="url"
+                      value={editForm.jobUrl ?? ''}
+                      onChange={(event) => handleEditChange('jobUrl', event.target.value)}
+                    />
+                  </label>
+                  <label className="field full">
+                    <span>Notes</span>
+                    <textarea
+                      rows={5}
+                      value={editForm.notes ?? ''}
+                      onChange={(event) => handleEditChange('notes', event.target.value)}
+                      placeholder="Add interview prep, contacts, or follow-ups."
+                    />
+                  </label>
+                </div>
+                <div className="form-actions">
+                  <p className="muted">Updates application and refreshes last touch.</p>
+                  <button type="submit" className="primary" disabled={updateBusy}>
+                    {updateBusy ? 'Saving…' : 'Save changes'}
+                  </button>
+                </div>
+              </form>
               <div className="detail-card history">
                 <h3>History</h3>
                 <ul>
