@@ -99,9 +99,9 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X Stage history timeline (stage events)
    - X Auto-update last touch indicator
 6. **Phase 5 — Tasks & Follow-ups**
-   - Create/edit tasks for application
-   - Task list filters (due today/this week/overdue)
-   - Mark done/undone with optimistic updates
+   - X Create/edit tasks for application
+   - X Task list filters (due today/this week/overdue)
+   - X Mark done/undone with optimistic updates
 7. **Phase 6 — Audit & Activity**
    - Activity feed (latest transitions + task events)
    - Detail view per event (actor + note)

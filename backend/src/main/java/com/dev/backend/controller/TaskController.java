@@ -3,6 +3,7 @@ package com.dev.backend.controller;
 import com.dev.backend.dto.TaskCreateRequest;
 import com.dev.backend.dto.TaskResponse;
 import com.dev.backend.dto.TaskStatusUpdateRequest;
+import com.dev.backend.dto.TaskUpdateRequest;
 import com.dev.backend.security.JwtAuthFilter;
 import com.dev.backend.service.TaskService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -69,6 +71,19 @@ public class TaskController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
         return TaskResponse.from(taskService.updateStatus(userId, id, request.getStatus()));
+    }
+
+    @PutMapping("/tasks/{id}")
+    public TaskResponse update(
+            @PathVariable("id") Long id,
+            @Valid @RequestBody TaskUpdateRequest request,
+            HttpServletRequest servletRequest
+    ) {
+        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+        return TaskResponse.from(taskService.update(userId, id, request));
     }
 
     @GetMapping("/tasks/due/today")

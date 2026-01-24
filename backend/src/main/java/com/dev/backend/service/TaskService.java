@@ -1,6 +1,7 @@
 package com.dev.backend.service;
 
 import com.dev.backend.dto.TaskCreateRequest;
+import com.dev.backend.dto.TaskUpdateRequest;
 import com.dev.backend.model.Application;
 import com.dev.backend.model.Task;
 import com.dev.backend.model.TaskStatus;
@@ -62,6 +63,16 @@ public class TaskService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
         Sort sort = Sort.by(Sort.Direction.ASC, "dueAt").and(Sort.by(Sort.Direction.ASC, "createdAt"));
         return taskRepository.findAllByApplicationId(application.getId(), sort);
+    }
+
+    public Task update(Long userId, Long taskId, TaskUpdateRequest request) {
+        Task task = taskRepository.findByIdAndApplicationUserId(taskId, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
+        task.setTitle(request.getTitle());
+        task.setDueAt(request.getDueAt());
+        task.setSnoozeUntil(request.getSnoozeUntil());
+        task.setNotes(request.getNotes());
+        return taskRepository.save(task);
     }
 
     @Transactional

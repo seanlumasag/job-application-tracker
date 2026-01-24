@@ -3,6 +3,7 @@ import { apiClient } from './lib/apiClient';
 import { applicationService, type ApplicationPayload } from './services/applicationService';
 import { authService } from './services/authService';
 import { dashboardService } from './services/dashboardService';
+import { taskService, type TaskPayload } from './services/taskService';
 import type {
   Application,
   AuthResponse,
@@ -12,6 +13,7 @@ import type {
   Stage,
   StageEvent,
   Task,
+  TaskStatus,
 } from './types';
 import './App.css';
 
@@ -25,12 +27,21 @@ const STAGE_TRANSITIONS: Record<Stage, Stage[]> = {
   WITHDRAWN: [],
 };
 
+type TaskFilter = 'ALL' | 'DUE_TODAY' | 'DUE_WEEK' | 'OVERDUE' | 'DONE';
+
 const emptyApplicationPayload = (): ApplicationPayload => ({
   company: '',
   role: '',
   jobUrl: '',
   location: '',
   notes: '',
+});
+
+const emptyTaskPayload = (): TaskPayload => ({
+  title: '',
+  dueAt: '',
+  notes: '',
+  snoozeUntil: '',
 });
 
 type ViewKey = 'dashboard' | 'applications' | 'detail';
@@ -59,6 +70,12 @@ function App() {
   const [updateBusy, setUpdateBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
   const [transitionBusy, setTransitionBusy] = useState(false);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [taskFilter, setTaskFilter] = useState<TaskFilter>('ALL');
+  const [taskForm, setTaskForm] = useState<TaskPayload>(() => emptyTaskPayload());
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
+  const [taskBusy, setTaskBusy] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -76,6 +93,7 @@ function App() {
       setNextActions(null);
       setActivity(null);
       setApplications([]);
+      setTasks([]);
       setError('');
       return;
     }
@@ -90,6 +108,10 @@ function App() {
   useEffect(() => {
     if (!selectedApp) {
       setEditForm(emptyApplicationPayload());
+      setTasks([]);
+      setTasksLoading(false);
+      setTaskForm(emptyTaskPayload());
+      setEditingTaskId(null);
       setStageEvents([]);
       return;
     }
@@ -101,6 +123,7 @@ function App() {
       notes: selectedApp.notes ?? '',
     });
     void loadStageEvents(selectedApp.id);
+    void loadTasks(selectedApp.id);
   }, [selectedApp]);
 
   const refreshDashboard = async () => {
@@ -191,12 +214,52 @@ function App() {
     }
   }
 
+  async function loadTasks(applicationId: number) {
+    setTasksLoading(true);
+    try {
+      const taskList = await taskService.listForApplication(applicationId);
+      setTasks(taskList);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load tasks';
+      setError(message);
+      setTasks([]);
+    } finally {
+      setTasksLoading(false);
+    }
+  }
+
   const handleCreateChange = (field: keyof ApplicationPayload, value: string) => {
     setCreateForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleEditChange = (field: keyof ApplicationPayload, value: string) => {
     setEditForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const normalizeTaskPayload = (payload: TaskPayload): TaskPayload => ({
+    title: payload.title.trim(),
+    dueAt: payload.dueAt?.trim() ? payload.dueAt : null,
+    snoozeUntil: payload.snoozeUntil?.trim() ? payload.snoozeUntil : null,
+    notes: payload.notes?.trim() || null,
+  });
+
+  const handleTaskChange = (field: keyof TaskPayload, value: string) => {
+    setTaskForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const startEditTask = (task: Task) => {
+    setEditingTaskId(task.id);
+    setTaskForm({
+      title: task.title,
+      dueAt: toDateTimeLocal(task.dueAt),
+      snoozeUntil: toDateTimeLocal(task.snoozeUntil),
+      notes: task.notes ?? '',
+    });
+  };
+
+  const resetTaskForm = () => {
+    setEditingTaskId(null);
+    setTaskForm(emptyTaskPayload());
   };
 
   const submitCreate = async (event: React.FormEvent) => {
@@ -251,6 +314,33 @@ function App() {
     }
   };
 
+  const submitTask = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!selectedApp) return;
+    if (!taskForm.title.trim()) {
+      setError('Task title is required');
+      return;
+    }
+    const payload = normalizeTaskPayload(taskForm);
+    setTaskBusy(true);
+    setError('');
+    try {
+      let saved: Task;
+      if (editingTaskId) {
+        saved = await taskService.update(editingTaskId, payload);
+      } else {
+        saved = await taskService.create(selectedApp.id, payload);
+      }
+      setTasks((prev) => sortTasks(prev.filter((task) => task.id !== saved.id).concat(saved)));
+      resetTaskForm();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to save task';
+      setError(message);
+    } finally {
+      setTaskBusy(false);
+    }
+  };
+
   const deleteApplication = async () => {
     if (!selectedApp) return;
     const confirmed = window.confirm(`Delete application for ${selectedApp.company}?`);
@@ -300,6 +390,28 @@ function App() {
     }
   };
 
+  const toggleTaskStatus = async (task: Task, nextStatus: TaskStatus) => {
+    const previous = tasks;
+    const optimistic = tasks.map((item) =>
+      item.id === task.id
+        ? {
+            ...item,
+            status: nextStatus,
+            completedAt: nextStatus === 'DONE' ? new Date().toISOString() : null,
+          }
+        : item,
+    );
+    setTasks(sortTasks(optimistic));
+    try {
+      const updated = await taskService.updateStatus(task.id, nextStatus);
+      setTasks((prev) => sortTasks(prev.map((item) => (item.id === updated.id ? updated : item))));
+    } catch (err) {
+      setTasks(previous);
+      const message = err instanceof Error ? err.message : 'Failed to update task status';
+      setError(message);
+    }
+  };
+
   const activityMax = useMemo(() => {
     if (!activity) return 1;
     return Math.max(
@@ -307,6 +419,35 @@ function App() {
       ...activity.items.map((item) => Math.max(item.stageTransitions, item.taskCompletions)),
     );
   }, [activity]);
+
+  const filteredTasks = useMemo(() => {
+    const startOfToday = startOfDay(new Date());
+    const startOfTomorrow = addDays(startOfToday, 1);
+    const startOfWeek = startOfWeekMonday(new Date());
+    const startOfNextWeek = addDays(startOfWeek, 7);
+
+    return tasks.filter((task) => {
+      const due = task.dueAt ? new Date(task.dueAt) : null;
+      switch (taskFilter) {
+        case 'DUE_TODAY':
+          return (
+            task.status === 'OPEN' &&
+            !!due &&
+            due >= startOfToday &&
+            due < startOfTomorrow
+          );
+        case 'DUE_WEEK':
+          return task.status === 'OPEN' && !!due && due >= startOfWeek && due < startOfNextWeek;
+        case 'OVERDUE':
+          return task.status === 'OPEN' && !!due && due < startOfToday;
+        case 'DONE':
+          return task.status === 'DONE';
+        case 'ALL':
+        default:
+          return true;
+      }
+    });
+  }, [taskFilter, tasks]);
 
   const showDetail = (app: Application) => {
     setSelectedApp(app);
@@ -711,6 +852,120 @@ function App() {
                   <strong>{formatDateTime(selectedApp.lastTouchAt)}</strong>
                 </div>
               </div>
+              <div className="detail-card tasks-card">
+                <div className="panel-header">
+                  <div>
+                    <h3>Tasks</h3>
+                    <p className="muted">Create and manage follow-ups for this application.</p>
+                  </div>
+                  <div className="task-filters">
+                    {[
+                      { key: 'ALL', label: 'All' },
+                      { key: 'DUE_TODAY', label: 'Due today' },
+                      { key: 'DUE_WEEK', label: 'Due this week' },
+                      { key: 'OVERDUE', label: 'Overdue' },
+                      { key: 'DONE', label: 'Done' },
+                    ].map((filter) => (
+                      <button
+                        key={filter.key}
+                        type="button"
+                        className={taskFilter === filter.key ? 'ghost active' : 'ghost'}
+                        onClick={() => setTaskFilter(filter.key as TaskFilter)}
+                      >
+                        {filter.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <form className="task-form" onSubmit={submitTask}>
+                  <div className="form-grid two-col">
+                    <label className="field">
+                      <span>Title</span>
+                      <input
+                        type="text"
+                        value={taskForm.title}
+                        onChange={(event) => handleTaskChange('title', event.target.value)}
+                        required
+                        placeholder="Schedule recruiter screen"
+                      />
+                    </label>
+                    <label className="field">
+                      <span>Due at</span>
+                      <input
+                        type="datetime-local"
+                        value={taskForm.dueAt ?? ''}
+                        onChange={(event) => handleTaskChange('dueAt', event.target.value)}
+                      />
+                    </label>
+                    <label className="field full">
+                      <span>Notes</span>
+                      <textarea
+                        rows={3}
+                        value={taskForm.notes ?? ''}
+                        onChange={(event) => handleTaskChange('notes', event.target.value)}
+                        placeholder="Add prep links or who to email."
+                      />
+                    </label>
+                  </div>
+                  <div className="form-actions">
+                    <div className="muted">
+                      {editingTaskId ? 'Editing existing task' : 'Creates an OPEN task'}
+                    </div>
+                    <div className="task-form-actions">
+                      {editingTaskId && (
+                        <button type="button" className="ghost" onClick={resetTaskForm} disabled={taskBusy}>
+                          Cancel edit
+                        </button>
+                      )}
+                      <button type="submit" className="primary" disabled={taskBusy}>
+                        {taskBusy
+                          ? 'Saving…'
+                          : editingTaskId
+                            ? 'Save task changes'
+                            : 'Add task'}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+                <div className="task-list">
+                  {tasksLoading ? (
+                    <p className="empty">Loading tasks…</p>
+                  ) : filteredTasks.length ? (
+                    filteredTasks.map((task) => (
+                      <div key={task.id} className={`task-item ${task.status === 'DONE' ? 'done' : ''}`}>
+                        <label className="task-check">
+                          <input
+                            type="checkbox"
+                            checked={task.status === 'DONE'}
+                            onChange={() =>
+                              toggleTaskStatus(task, task.status === 'DONE' ? 'OPEN' : 'DONE')
+                            }
+                          />
+                          <span />
+                        </label>
+                        <div className="task-main">
+                          <div className="task-title-row">
+                            <span className="task-title">{task.title}</span>
+                            {task.dueAt && (
+                              <span className="due-tag">
+                                Due {formatDateTime(task.dueAt)} ({formatRelative(task.dueAt)})
+                              </span>
+                            )}
+                          </div>
+                          {task.notes && <p className="task-notes">{task.notes}</p>}
+                        </div>
+                        <div className="task-actions">
+                          <button type="button" className="ghost" onClick={() => startEditTask(task)}>
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="empty">No tasks for this application yet.</p>
+                  )}
+                </div>
+              </div>
               <form className="detail-card form-card" onSubmit={submitUpdate}>
                 <h3>Edit fields + notes</h3>
                 <div className="form-grid two-col">
@@ -829,6 +1084,51 @@ function formatRelative(value: string) {
   if (days <= 0) return 'today';
   if (days === 1) return '1 day ago';
   return `${days} days ago`;
+}
+
+function startOfDay(date: Date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function addDays(date: Date, days: number) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function startOfWeekMonday(date: Date) {
+  const d = startOfDay(date);
+  const day = d.getDay();
+  const diff = (day === 0 ? -6 : 1) - day;
+  d.setDate(d.getDate() + diff);
+  return d;
+}
+
+function toDateTimeLocal(value?: string | null) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (n: number) => n.toString().padStart(2, '0');
+  const yyyy = date.getFullYear();
+  const mm = pad(date.getMonth() + 1);
+  const dd = pad(date.getDate());
+  const hh = pad(date.getHours());
+  const min = pad(date.getMinutes());
+  return `${yyyy}-${mm}-${dd}T${hh}:${min}`;
+}
+
+function sortTasks(list: Task[]) {
+  return [...list].sort((a, b) => {
+    if (a.status !== b.status) {
+      return a.status === 'OPEN' ? -1 : 1;
+    }
+    const aTime = a.dueAt ? new Date(a.dueAt).getTime() : Number.POSITIVE_INFINITY;
+    const bTime = b.dueAt ? new Date(b.dueAt).getTime() : Number.POSITIVE_INFINITY;
+    if (aTime !== bTime) return aTime - bTime;
+    return a.id - b.id;
+  });
 }
 
 export default App;
