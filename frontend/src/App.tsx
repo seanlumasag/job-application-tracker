@@ -114,9 +114,10 @@ function App() {
       setError('');
       return;
     }
-  loadAuditEvents();
-  loadStaleApplications(staleDays);
-}, [token]);
+    refreshDashboard();
+    loadAuditEvents();
+    loadStaleApplications(staleDays);
+  }, [token]);
 
   useEffect(() => {
     if (!token) return;
@@ -231,7 +232,7 @@ function App() {
   const validateApplicationPayload = (payload: ApplicationPayload) => {
     if (payload.company.trim().length < 2) return 'Company name must be at least 2 characters.';
     if (payload.role.trim().length < 2) return 'Role must be at least 2 characters.';
-    if (payload.jobUrl && !/^https?:\\/\\//i.test(payload.jobUrl.trim())) {
+    if (payload.jobUrl && !/^https?:\/\//i.test(payload.jobUrl.trim())) {
       return 'Job URL must start with http:// or https://';
     }
     return '';
