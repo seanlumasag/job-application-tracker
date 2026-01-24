@@ -50,6 +50,16 @@ export interface DashboardActivityResponse {
   items: DashboardActivityPoint[];
 }
 
+export interface StageEvent {
+  id: number;
+  applicationId: number;
+  fromStage: Stage;
+  toStage: Stage;
+  note?: string | null;
+  actor?: string | null;
+  createdAt: string;
+}
+
 export interface User {
   id: string;
   email: string;

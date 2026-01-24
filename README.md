@@ -95,9 +95,9 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X Edit application fields + notes
    - X Delete (or archive) application action
 5. **Phase 4 — Workflow UI**
-   - Stage transition controls with validation messages
-   - Stage history timeline (stage events)
-   - Auto-update last touch indicator
+   - X Stage transition controls with validation messages
+   - X Stage history timeline (stage events)
+   - X Auto-update last touch indicator
 6. **Phase 5 — Tasks & Follow-ups**
    - Create/edit tasks for application
    - Task list filters (due today/this week/overdue)

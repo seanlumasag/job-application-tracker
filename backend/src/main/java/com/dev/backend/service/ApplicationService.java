@@ -77,6 +77,12 @@ public class ApplicationService {
         applicationRepository.delete(application);
     }
 
+    public List<StageEvent> listStageEvents(Long userId, Long applicationId) {
+        applicationRepository.findByIdAndUserId(applicationId, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
+        return stageEventRepository.findAllByApplicationIdAndApplicationUserIdOrderByCreatedAtDesc(applicationId, userId);
+    }
+
     @Transactional
     public Application transitionStage(Long userId, Long applicationId, Stage nextStage) {
         Application application = applicationRepository.findByIdAndUserId(applicationId, userId)

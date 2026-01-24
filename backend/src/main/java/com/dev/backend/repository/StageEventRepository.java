@@ -13,4 +13,9 @@ public interface StageEventRepository extends JpaRepository<StageEvent, Long> {
             java.time.LocalDateTime start,
             java.time.LocalDateTime end
     );
+
+    List<StageEvent> findAllByApplicationIdAndApplicationUserIdOrderByCreatedAtDesc(
+            Long applicationId,
+            Long userId
+    );
 }

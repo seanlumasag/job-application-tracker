@@ -10,11 +10,20 @@ import type {
   DashboardNextActionsResponse,
   DashboardSummaryResponse,
   Stage,
+  StageEvent,
   Task,
 } from './types';
 import './App.css';
 
 const STAGES: Stage[] = ['SAVED', 'APPLIED', 'INTERVIEW', 'OFFER', 'REJECTED', 'WITHDRAWN'];
+const STAGE_TRANSITIONS: Record<Stage, Stage[]> = {
+  SAVED: ['APPLIED', 'WITHDRAWN'],
+  APPLIED: ['INTERVIEW', 'OFFER', 'REJECTED', 'WITHDRAWN'],
+  INTERVIEW: ['OFFER', 'REJECTED', 'WITHDRAWN'],
+  OFFER: ['REJECTED', 'WITHDRAWN'],
+  REJECTED: [],
+  WITHDRAWN: [],
+};
 
 const emptyApplicationPayload = (): ApplicationPayload => ({
   company: '',
@@ -38,6 +47,8 @@ function App() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [createForm, setCreateForm] = useState<ApplicationPayload>(() => emptyApplicationPayload());
   const [editForm, setEditForm] = useState<ApplicationPayload>(() => emptyApplicationPayload());
+  const [stageEvents, setStageEvents] = useState<StageEvent[]>([]);
+  const [stageEventsLoading, setStageEventsLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [authMode, setAuthMode] = useState<AuthMode>('login');
@@ -47,6 +58,7 @@ function App() {
   const [createBusy, setCreateBusy] = useState(false);
   const [updateBusy, setUpdateBusy] = useState(false);
   const [deleteBusy, setDeleteBusy] = useState(false);
+  const [transitionBusy, setTransitionBusy] = useState(false);
 
   useEffect(() => {
     if (token) {
@@ -78,6 +90,7 @@ function App() {
   useEffect(() => {
     if (!selectedApp) {
       setEditForm(emptyApplicationPayload());
+      setStageEvents([]);
       return;
     }
     setEditForm({
@@ -87,6 +100,7 @@ function App() {
       location: selectedApp.location ?? '',
       notes: selectedApp.notes ?? '',
     });
+    void loadStageEvents(selectedApp.id);
   }, [selectedApp]);
 
   const refreshDashboard = async () => {
@@ -142,10 +156,11 @@ function App() {
     try {
       const apps = await applicationService.list(targetStage === 'ALL' ? undefined : targetStage);
       setApplications(apps);
-      if (selectedApp) {
-        const updated = apps.find((app) => app.id === selectedApp.id) ?? null;
-        setSelectedApp(updated);
-      }
+      setSelectedApp((prev) => {
+        if (!prev) return null;
+        const updated = apps.find((app) => app.id === prev.id);
+        return updated ?? prev;
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load applications';
       setError(message);
@@ -161,6 +176,20 @@ function App() {
     location: payload.location?.trim() || null,
     notes: payload.notes?.trim() || null,
   });
+
+  async function loadStageEvents(applicationId: number) {
+    setStageEventsLoading(true);
+    try {
+      const events = await applicationService.listStageEvents(applicationId);
+      setStageEvents(events);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load stage history';
+      setError(message);
+      setStageEvents([]);
+    } finally {
+      setStageEventsLoading(false);
+    }
+  }
 
   const handleCreateChange = (field: keyof ApplicationPayload, value: string) => {
     setCreateForm((prev) => ({ ...prev, [field]: value }));
@@ -240,6 +269,34 @@ function App() {
       setError(message);
     } finally {
       setDeleteBusy(false);
+    }
+  };
+
+  const handleStageTransition = async (nextStage: Stage) => {
+    if (!selectedApp) return;
+    if (selectedApp.stage === nextStage) {
+      setError('Stage is already set to that value.');
+      return;
+    }
+    const allowed = STAGE_TRANSITIONS[selectedApp.stage] ?? [];
+    if (!allowed.includes(nextStage)) {
+      setError(`Cannot move from ${selectedApp.stage} to ${nextStage}.`);
+      return;
+    }
+
+    setTransitionBusy(true);
+    setError('');
+    try {
+      const updated = await applicationService.transitionStage(selectedApp.id, nextStage);
+      setSelectedApp(updated);
+      setApplications((prev) => prev.map((app) => (app.id === updated.id ? updated : app)));
+      await loadStageEvents(updated.id);
+      await refreshApplications(stageFilter);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to update stage';
+      setError(message);
+    } finally {
+      setTransitionBusy(false);
     }
   };
 
@@ -624,6 +681,36 @@ function App() {
                   </div>
                 </dl>
               </div>
+              <div className="detail-card stage-card">
+                <div className="stage-card-header">
+                  <h3>Stage controls</h3>
+                  <span className="stage-chip">{selectedApp.stage}</span>
+                </div>
+                <p className="muted">
+                  Allowed transitions depend on the current stage. Updates last touch automatically.
+                </p>
+                <div className="stage-actions">
+                  {STAGE_TRANSITIONS[selectedApp.stage].length === 0 ? (
+                    <p className="empty">Terminal stage. No further transitions.</p>
+                  ) : (
+                    STAGE_TRANSITIONS[selectedApp.stage].map((stage) => (
+                      <button
+                        key={stage}
+                        type="button"
+                        className="ghost stage-button"
+                        disabled={transitionBusy}
+                        onClick={() => handleStageTransition(stage)}
+                      >
+                        Move to {stage}
+                      </button>
+                    ))
+                  )}
+                </div>
+                <div className="last-touch">
+                  <span className="muted">Last touch</span>
+                  <strong>{formatDateTime(selectedApp.lastTouchAt)}</strong>
+                </div>
+              </div>
               <form className="detail-card form-card" onSubmit={submitUpdate}>
                 <h3>Edit fields + notes</h3>
                 <div className="form-grid two-col">
@@ -679,13 +766,29 @@ function App() {
                 </div>
               </form>
               <div className="detail-card history">
-                <h3>History</h3>
-                <ul>
-                  <li>Created {formatDateTime(selectedApp.createdAt)}</li>
-                  <li>Last updated {formatDateTime(selectedApp.updatedAt)}</li>
-                  <li>Stage moved {formatRelative(selectedApp.stageChangedAt ?? selectedApp.createdAt)}</li>
-                </ul>
-                <p className="empty">Stage events will appear here once enabled.</p>
+                <h3>Stage history</h3>
+                {stageEventsLoading ? (
+                  <p className="empty">Loading history…</p>
+                ) : stageEvents.length ? (
+                  <ul className="timeline">
+                    {stageEvents.map((event) => (
+                      <li key={event.id} className="timeline-item">
+                        <div className="timeline-stage">
+                          <span>{event.fromStage}</span>
+                          <span className="arrow">→</span>
+                          <span>{event.toStage}</span>
+                        </div>
+                        <div className="timeline-meta">
+                          <span>{formatDateTime(event.createdAt)}</span>
+                          {event.actor && <span className="actor">{event.actor}</span>}
+                        </div>
+                        {event.note && <p className="timeline-note">{event.note}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="empty">No stage transitions recorded yet.</p>
+                )}
               </div>
             </div>
           </section>

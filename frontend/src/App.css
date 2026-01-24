@@ -520,6 +520,81 @@
   background: #fffdf8;
 }
 
+.stage-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stage-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.stage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.stage-button {
+  border-color: var(--accent-soft);
+  background: #fff;
+}
+
+.last-touch {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.timeline {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.timeline-item {
+  border: 1px solid var(--surface-strong);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  background: #fff;
+}
+
+.timeline-stage {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.timeline-stage .arrow {
+  color: var(--muted);
+}
+
+.timeline-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.timeline-note {
+  margin: 8px 0 0;
+}
+
 @media (min-width: 900px) {
   .dashboard-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

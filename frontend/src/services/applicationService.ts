@@ -1,5 +1,5 @@
 import { apiClient } from '../lib/apiClient';
-import type { Application, Stage } from '../types';
+import type { Application, Stage, StageEvent } from '../types';
 
 export interface ApplicationPayload {
   company: string;
@@ -24,6 +24,16 @@ export const applicationService = {
 
   async update(id: number, payload: ApplicationPayload): Promise<Application> {
     const response = await apiClient.put<Application>(`/applications/${id}`, payload);
+    return response.data;
+  },
+
+  async transitionStage(id: number, stage: Stage): Promise<Application> {
+    const response = await apiClient.patch<Application>(`/applications/${id}/stage`, { stage });
+    return response.data;
+  },
+
+  async listStageEvents(id: number): Promise<StageEvent[]> {
+    const response = await apiClient.get<StageEvent[]>(`/applications/${id}/stage-events`);
     return response.data;
   },
 

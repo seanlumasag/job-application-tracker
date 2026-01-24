@@ -4,6 +4,7 @@ import com.dev.backend.dto.ApplicationCreateRequest;
 import com.dev.backend.dto.ApplicationResponse;
 import com.dev.backend.dto.ApplicationStageUpdateRequest;
 import com.dev.backend.dto.ApplicationUpdateRequest;
+import com.dev.backend.dto.StageEventResponse;
 import com.dev.backend.model.Stage;
 import com.dev.backend.security.JwtAuthFilter;
 import com.dev.backend.service.ApplicationService;
@@ -62,6 +63,20 @@ public class ApplicationController {
         }
         return applicationService.list(userId, stage).stream()
                 .map(ApplicationResponse::from)
+                .collect(Collectors.toList());
+    }
+
+    @GetMapping("/{id}/stage-events")
+    public List<StageEventResponse> stageEvents(
+            @PathVariable("id") Long id,
+            HttpServletRequest servletRequest
+    ) {
+        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        if (userId == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
+        }
+        return applicationService.listStageEvents(userId, id).stream()
+                .map(StageEventResponse::from)
                 .collect(Collectors.toList());
     }
 
