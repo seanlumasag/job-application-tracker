@@ -60,6 +60,16 @@ export interface StageEvent {
   createdAt: string;
 }
 
+export interface AuditEvent {
+  id: number;
+  type: string;
+  entityType: string;
+  entityId?: number | null;
+  payload?: string | null;
+  correlationId?: string | null;
+  createdAt: string;
+}
+
 export interface User {
   id: string;
   email: string;

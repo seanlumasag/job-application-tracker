@@ -103,8 +103,8 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X Task list filters (due today/this week/overdue)
    - X Mark done/undone with optimistic updates
 7. **Phase 6 — Audit & Activity**
-   - Activity feed (latest transitions + task events)
-   - Detail view per event (actor + note)
+   - X Activity feed (latest transitions + task events)
+   - X Detail view per event (actor + note)
 8. **Phase 7 — Dashboards (Product UI)**
    - Stale applications view
    - Next actions panel (tasks due soon + apps needing follow-up)

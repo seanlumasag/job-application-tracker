@@ -4,6 +4,7 @@ import { applicationService, type ApplicationPayload } from './services/applicat
 import { authService } from './services/authService';
 import { dashboardService } from './services/dashboardService';
 import { taskService, type TaskPayload } from './services/taskService';
+import { auditService } from './services/auditService';
 import type {
   Application,
   AuthResponse,
@@ -14,6 +15,7 @@ import type {
   StageEvent,
   Task,
   TaskStatus,
+  AuditEvent,
 } from './types';
 import './App.css';
 
@@ -76,6 +78,9 @@ function App() {
   const [taskForm, setTaskForm] = useState<TaskPayload>(() => emptyTaskPayload());
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [taskBusy, setTaskBusy] = useState(false);
+  const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [selectedAuditEvent, setSelectedAuditEvent] = useState<AuditEvent | null>(null);
 
   useEffect(() => {
     if (token) {
@@ -94,10 +99,14 @@ function App() {
       setActivity(null);
       setApplications([]);
       setTasks([]);
+      setAuditEvents([]);
+      setSelectedAuditEvent(null);
+      setAuditLoading(false);
       setError('');
       return;
     }
     refreshDashboard();
+    loadAuditEvents();
   }, [token]);
 
   useEffect(() => {
@@ -228,6 +237,22 @@ function App() {
     }
   }
 
+  async function loadAuditEvents() {
+    setAuditLoading(true);
+    try {
+      const events = await auditService.list(0, 25);
+      setAuditEvents(events);
+      setSelectedAuditEvent((prev) => prev ?? events[0] ?? null);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to load activity feed';
+      setError(message);
+      setAuditEvents([]);
+      setSelectedAuditEvent(null);
+    } finally {
+      setAuditLoading(false);
+    }
+  }
+
   const handleCreateChange = (field: keyof ApplicationPayload, value: string) => {
     setCreateForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -333,6 +358,7 @@ function App() {
       }
       setTasks((prev) => sortTasks(prev.filter((task) => task.id !== saved.id).concat(saved)));
       resetTaskForm();
+      await loadAuditEvents();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to save task';
       setError(message);
@@ -382,6 +408,7 @@ function App() {
       setApplications((prev) => prev.map((app) => (app.id === updated.id ? updated : app)));
       await loadStageEvents(updated.id);
       await refreshApplications(stageFilter);
+      await loadAuditEvents();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update stage';
       setError(message);
@@ -405,6 +432,9 @@ function App() {
     try {
       const updated = await taskService.updateStatus(task.id, nextStatus);
       setTasks((prev) => sortTasks(prev.map((item) => (item.id === updated.id ? updated : item))));
+      if (nextStatus === 'DONE') {
+        await loadAuditEvents();
+      }
     } catch (err) {
       setTasks(previous);
       const message = err instanceof Error ? err.message : 'Failed to update task status';
@@ -419,6 +449,14 @@ function App() {
       ...activity.items.map((item) => Math.max(item.stageTransitions, item.taskCompletions)),
     );
   }, [activity]);
+
+  const applicationLookup = useMemo(() => {
+    const map = new Map<number, string>();
+    applications.forEach((app) => {
+      map.set(app.id, `${app.company} — ${app.role}`);
+    });
+    return map;
+  }, [applications]);
 
   const filteredTasks = useMemo(() => {
     const startOfToday = startOfDay(new Date());
@@ -648,6 +686,75 @@ function App() {
                     ))
                   ) : (
                     <p className="empty">Everything is freshly touched.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="panel feed-panel">
+              <div className="panel-header">
+                <div>
+                  <h2>Activity feed</h2>
+                  <p>Latest stage transitions and task events.</p>
+                </div>
+                <button type="button" className="ghost" onClick={loadAuditEvents} disabled={auditLoading}>
+                  {auditLoading ? 'Loading…' : 'Refresh'}
+                </button>
+              </div>
+              <div className="feed-grid">
+                <div className="feed-list">
+                  {auditLoading ? (
+                    <p className="empty">Loading activity…</p>
+                  ) : auditEvents.length ? (
+                    auditEvents.map((event) => (
+                      <button
+                        key={event.id}
+                        type="button"
+                        className={`feed-row ${selectedAuditEvent?.id === event.id ? 'active' : ''}`}
+                        onClick={() => setSelectedAuditEvent(event)}
+                      >
+                        <div className="feed-row-main">
+                          <span className="feed-type">{event.type}</span>
+                          <span className="feed-summary">{describeEvent(event, applicationLookup)}</span>
+                        </div>
+                        <span className="feed-time">{formatRelative(event.createdAt)}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="empty">No activity yet.</p>
+                  )}
+                </div>
+                <div className="feed-detail">
+                  {selectedAuditEvent ? (
+                    <>
+                      <div className="feed-detail-header">
+                        <span className="feed-type">{selectedAuditEvent.type}</span>
+                        <span className="feed-time">{formatDateTime(selectedAuditEvent.createdAt)}</span>
+                      </div>
+                      <p className="feed-summary">{describeEvent(selectedAuditEvent, applicationLookup)}</p>
+                      <dl className="feed-meta">
+                        <div>
+                          <dt>Entity</dt>
+                          <dd>
+                            {selectedAuditEvent.entityType} #{selectedAuditEvent.entityId ?? '—'}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Actor</dt>
+                          <dd>{extractActor(selectedAuditEvent) || 'Unknown'}</dd>
+                        </div>
+                        <div>
+                          <dt>Correlation</dt>
+                          <dd>{selectedAuditEvent.correlationId || '—'}</dd>
+                        </div>
+                      </dl>
+                      <div className="feed-note">
+                        <h4>Note</h4>
+                        <p>{extractNote(selectedAuditEvent) || 'No note provided.'}</p>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="empty">Select an event to see details.</p>
                   )}
                 </div>
               </div>
@@ -1129,6 +1236,62 @@ function sortTasks(list: Task[]) {
     if (aTime !== bTime) return aTime - bTime;
     return a.id - b.id;
   });
+}
+
+function parsePayload(payload?: string | null): Record<string, unknown> | null {
+  if (!payload) return null;
+  try {
+    const parsed = JSON.parse(payload);
+    return typeof parsed === 'object' && parsed !== null ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+function describeEvent(event: AuditEvent, applicationLookup: Map<number, string>) {
+  const payload = parsePayload(event.payload);
+  const payloadAppId = typeof payload?.applicationId === 'number' ? payload.applicationId : undefined;
+  const applicationId =
+    event.entityType === 'application'
+      ? event.entityId ?? payloadAppId
+      : payloadAppId ?? event.entityId;
+  const appLabel =
+    applicationId && applicationLookup.get(applicationId)
+      ? applicationLookup.get(applicationId)
+      : applicationId
+        ? `Application #${applicationId}`
+        : 'Unknown application';
+
+  switch (event.type) {
+    case 'application.stage_changed':
+      return `${appLabel}: ${(payload?.fromStage as string | undefined) ?? 'Unknown'} → ${(payload?.toStage as string | undefined) ?? 'Unknown'}`;
+    case 'task.created': {
+      const title = typeof payload?.title === 'string' ? payload.title : '';
+      return `${appLabel}: Task created${title ? ` — ${title}` : ''}`;
+    }
+    case 'task.completed': {
+      const title = typeof payload?.title === 'string' ? payload.title : '';
+      return `${appLabel}: Task completed${title ? ` — ${title}` : ''}`;
+    }
+    default:
+      return `${event.type}${appLabel ? ` · ${appLabel}` : ''}`;
+  }
+}
+
+function extractActor(event: AuditEvent) {
+  const payload = parsePayload(event.payload);
+  const actor = payload?.actor;
+  return typeof actor === 'string' ? actor : null;
+}
+
+function extractNote(event: AuditEvent) {
+  const payload = parsePayload(event.payload);
+  const note = (payload?.note ?? payload?.notes) as unknown;
+  if (typeof note === 'string') {
+    const trimmed = note.trim();
+    return trimmed || null;
+  }
+  return null;
 }
 
 export default App;

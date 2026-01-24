@@ -114,7 +114,8 @@ public class ApplicationService {
                 saved.getId(),
                 java.util.Map.of(
                         "fromStage", currentStage,
-                        "toStage", nextStage
+                        "toStage", nextStage,
+                        "actor", "user:" + userId
                 )
         );
 

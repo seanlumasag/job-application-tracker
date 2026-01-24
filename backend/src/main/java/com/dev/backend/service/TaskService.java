@@ -48,6 +48,7 @@ public class TaskService {
         payload.put("applicationId", applicationId);
         payload.put("title", saved.getTitle());
         payload.put("dueAt", saved.getDueAt());
+        payload.put("actor", "user:" + userId);
         auditService.record(
                 userId,
                 "task.created",
@@ -95,7 +96,9 @@ public class TaskService {
                     saved.getId(),
                     java.util.Map.of(
                             "applicationId", saved.getApplication().getId(),
-                            "completedAt", saved.getCompletedAt()
+                            "completedAt", saved.getCompletedAt(),
+                            "actor", "user:" + userId,
+                            "title", saved.getTitle()
                     )
             );
         }
