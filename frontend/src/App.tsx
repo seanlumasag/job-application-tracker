@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, memo } from 'react';
 import { apiClient } from './lib/apiClient';
 import { applicationService, type ApplicationPayload } from './services/applicationService';
 import { authService } from './services/authService';
@@ -80,6 +80,9 @@ function App() {
   const [taskForm, setTaskForm] = useState<TaskPayload>(() => emptyTaskPayload());
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [taskBusy, setTaskBusy] = useState(false);
+  const [createFormError, setCreateFormError] = useState('');
+  const [editFormError, setEditFormError] = useState('');
+  const [taskFormError, setTaskFormError] = useState('');
   const [auditEvents, setAuditEvents] = useState<AuditEvent[]>([]);
   const [auditLoading, setAuditLoading] = useState(false);
   const [selectedAuditEvent, setSelectedAuditEvent] = useState<AuditEvent | null>(null);
@@ -225,6 +228,15 @@ function App() {
     notes: payload.notes?.trim() || null,
   });
 
+  const validateApplicationPayload = (payload: ApplicationPayload) => {
+    if (payload.company.trim().length < 2) return 'Company name must be at least 2 characters.';
+    if (payload.role.trim().length < 2) return 'Role must be at least 2 characters.';
+    if (payload.jobUrl && !/^https?:\\/\\//i.test(payload.jobUrl.trim())) {
+      return 'Job URL must start with http:// or https://';
+    }
+    return '';
+  };
+
   async function loadStageEvents(applicationId: number) {
     setStageEventsLoading(true);
     try {
@@ -302,6 +314,11 @@ function App() {
     setTaskForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const validateTaskPayload = (payload: TaskPayload) => {
+    if (payload.title.trim().length < 3) return 'Task title must be at least 3 characters.';
+    return '';
+  };
+
   const startEditTask = (task: Task) => {
     setEditingTaskId(task.id);
     setTaskForm({
@@ -319,10 +336,13 @@ function App() {
 
   const submitCreate = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (!createForm.company.trim() || !createForm.role.trim()) {
-      setError('Company and role are required');
+    const validationMessage = validateApplicationPayload(createForm);
+    if (validationMessage) {
+      setCreateFormError(validationMessage);
+      setError(validationMessage);
       return;
     }
+    setCreateFormError('');
 
     setCreateBusy(true);
     setError('');
@@ -348,10 +368,13 @@ function App() {
   const submitUpdate = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!selectedApp) return;
-    if (!editForm.company.trim() || !editForm.role.trim()) {
-      setError('Company and role are required');
+    const validationMessage = validateApplicationPayload(editForm);
+    if (validationMessage) {
+      setEditFormError(validationMessage);
+      setError(validationMessage);
       return;
     }
+    setEditFormError('');
 
     setUpdateBusy(true);
     setError('');
@@ -373,10 +396,13 @@ function App() {
   const submitTask = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!selectedApp) return;
-    if (!taskForm.title.trim()) {
-      setError('Task title is required');
+    const validationMessage = validateTaskPayload(taskForm);
+    if (validationMessage) {
+      setTaskFormError(validationMessage);
+      setError(validationMessage);
       return;
     }
+    setTaskFormError('');
     const payload = normalizeTaskPayload(taskForm);
     setTaskBusy(true);
     setError('');
@@ -647,16 +673,27 @@ function App() {
                 <p>Stage counts and overdue tasks.</p>
               </div>
               <div className="summary-grid">
-                {STAGES.map((stage) => (
-                  <div key={stage} className="summary-card">
-                    <span>{stage}</span>
-                    <strong>{summary?.stageCounts?.[stage] ?? 0}</strong>
-                  </div>
-                ))}
-                <div className="summary-card highlight">
-                  <span>Overdue tasks</span>
-                  <strong>{summary?.overdueTasks ?? 0}</strong>
-                </div>
+                {loading && !summary
+                  ? Array.from({ length: STAGES.length + 1 }).map((_, index) => (
+                      <div key={index} className="summary-card skeleton-card">
+                        <SkeletonLine width="60%" />
+                        <SkeletonLine width="40%" height={24} />
+                      </div>
+                    ))
+                  : (
+                      <>
+                        {STAGES.map((stage) => (
+                          <div key={stage} className="summary-card">
+                            <span>{stage}</span>
+                            <strong>{summary?.stageCounts?.[stage] ?? 0}</strong>
+                          </div>
+                        ))}
+                        <div className="summary-card highlight">
+                          <span>Overdue tasks</span>
+                          <strong>{summary?.overdueTasks ?? 0}</strong>
+                        </div>
+                      </>
+                    )}
               </div>
             </div>
 
@@ -680,24 +717,35 @@ function App() {
                 </div>
               </div>
               <div className="activity-list">
-                {activity?.items.map((item) => (
-                  <div key={item.date} className="activity-row">
-                    <span>{formatDate(item.date)}</span>
-                    <div className="activity-bars">
-                      <div
-                        className="bar transitions"
-                        style={{ width: `${(item.stageTransitions / activityMax) * 100}%` }}
-                      />
-                      <div
-                        className="bar completions"
-                        style={{ width: `${(item.taskCompletions / activityMax) * 100}%` }}
-                      />
-                    </div>
-                    <span className="activity-counts">
-                      {item.stageTransitions} · {item.taskCompletions}
-                    </span>
-                  </div>
-                ))}
+                {loading && !activity
+                  ? Array.from({ length: activityWindow === 30 ? 6 : 4 }).map((_, idx) => (
+                      <div key={idx} className="activity-row">
+                        <SkeletonLine width="40%" />
+                        <div className="activity-bars">
+                          <SkeletonLine height={8} />
+                          <SkeletonLine height={8} width="70%" />
+                        </div>
+                        <SkeletonLine width="30%" />
+                      </div>
+                    ))
+                  : activity?.items.map((item) => (
+                      <div key={item.date} className="activity-row">
+                        <span>{formatDate(item.date)}</span>
+                        <div className="activity-bars">
+                          <div
+                            className="bar transitions"
+                            style={{ width: `${(item.stageTransitions / activityMax) * 100}%` }}
+                          />
+                          <div
+                            className="bar completions"
+                            style={{ width: `${(item.taskCompletions / activityMax) * 100}%` }}
+                          />
+                        </div>
+                        <span className="activity-counts">
+                          {item.stageTransitions} · {item.taskCompletions}
+                        </span>
+                      </div>
+                    ))}
               </div>
             </div>
 
@@ -720,17 +768,19 @@ function App() {
               <div className="next-columns">
                 <div>
                   <h3>Due soon (next {nextActionsWindow}d)</h3>
-                  {nextActions?.dueSoonTasks?.length ? (
-                    nextActions.dueSoonTasks.map((task) => (
-                      <TaskRow key={task.id} task={task} />
-                    ))
+                  {loading && !nextActions ? (
+                    <SkeletonStack count={3} />
+                  ) : nextActions?.dueSoonTasks?.length ? (
+                    nextActions.dueSoonTasks.map((task) => <TaskRow key={task.id} task={task} />)
                   ) : (
                     <p className="empty">No due tasks in the next {nextActionsWindow} days.</p>
                   )}
                 </div>
                 <div>
                   <h3>Stale applications</h3>
-                  {nextActions?.staleApplications?.length ? (
+                  {loading && !nextActions ? (
+                    <SkeletonStack count={3} />
+                  ) : nextActions?.staleApplications?.length ? (
                     nextActions.staleApplications.map((app) => (
                       <button
                         key={app.id}
@@ -769,25 +819,11 @@ function App() {
                 </div>
               </div>
               {staleLoading ? (
-                <p className="empty">Loading stale applications…</p>
+                <SkeletonStack count={4} tall />
               ) : staleApplications.length ? (
                 <div className="stale-list">
                   {staleApplications.map((app) => (
-                    <button
-                      key={app.id}
-                      type="button"
-                      className="application-row"
-                      onClick={() => showDetail(app)}
-                    >
-                      <div>
-                        <h3>{app.company}</h3>
-                        <p>{app.role}</p>
-                      </div>
-                      <div className="application-meta">
-                        <span>{app.stage}</span>
-                        <span>Last touch {formatRelative(app.lastTouchAt)}</span>
-                      </div>
-                    </button>
+                    <ApplicationRow key={app.id} app={app} onSelect={showDetail} />
                   ))}
                 </div>
               ) : (
@@ -884,11 +920,11 @@ function App() {
                 </button>
               </div>
             </div>
-            <form className="app-form" onSubmit={submitCreate}>
-              <div className="form-grid two-col">
-                <label className="field">
-                  <span>Company</span>
-                  <input
+              <form className="app-form" onSubmit={submitCreate}>
+                <div className="form-grid two-col">
+                  <label className="field">
+                    <span>Company</span>
+                    <input
                     type="text"
                     value={createForm.company}
                     onChange={(event) => handleCreateChange('company', event.target.value)}
@@ -936,6 +972,7 @@ function App() {
               </div>
               <div className="form-actions">
                 <p className="muted">Creates in stage SAVED and stamps last touch now.</p>
+                {createFormError && <p className="form-error">{createFormError}</p>}
                 <button type="submit" className="primary" disabled={createBusy}>
                   {createBusy ? 'Adding…' : 'Add application'}
                 </button>
@@ -961,24 +998,10 @@ function App() {
               ))}
             </div>
             <div className="application-list">
-              {applications.length ? (
-                applications.map((app) => (
-                  <button
-                    key={app.id}
-                    type="button"
-                    className="application-row"
-                    onClick={() => showDetail(app)}
-                  >
-                    <div>
-                      <h3>{app.company}</h3>
-                      <p>{app.role}</p>
-                    </div>
-                    <div className="application-meta">
-                      <span>{app.stage}</span>
-                      <span>Last touch {formatRelative(app.lastTouchAt)}</span>
-                    </div>
-                  </button>
-                ))
+              {loading && !applications.length ? (
+                <SkeletonStack count={5} tall />
+              ) : applications.length ? (
+                applications.map((app) => <ApplicationRow key={app.id} app={app} onSelect={showDetail} />)
               ) : (
                 <p className="empty">No applications yet.</p>
               )}
@@ -1122,6 +1145,7 @@ function App() {
                     <div className="muted">
                       {editingTaskId ? 'Editing existing task' : 'Creates an OPEN task'}
                     </div>
+                    {taskFormError && <p className="form-error">{taskFormError}</p>}
                     <div className="task-form-actions">
                       {editingTaskId && (
                         <button type="button" className="ghost" onClick={resetTaskForm} disabled={taskBusy}>
@@ -1226,6 +1250,7 @@ function App() {
                 </div>
                 <div className="form-actions">
                   <p className="muted">Updates application and refreshes last touch.</p>
+                  {editFormError && <p className="form-error">{editFormError}</p>}
                   <button type="submit" className="primary" disabled={updateBusy}>
                     {updateBusy ? 'Saving…' : 'Save changes'}
                   </button>
@@ -1264,7 +1289,7 @@ function App() {
   );
 }
 
-function TaskRow({ task }: { task: Task }) {
+const TaskRow = memo(function TaskRow({ task }: { task: Task }) {
   return (
     <div className="task-row">
       <div>
@@ -1274,7 +1299,7 @@ function TaskRow({ task }: { task: Task }) {
       <span>{task.dueAt ? formatDateTime(task.dueAt) : 'No due date'}</span>
     </div>
   );
-}
+});
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
@@ -1340,6 +1365,44 @@ function sortTasks(list: Task[]) {
     if (aTime !== bTime) return aTime - bTime;
     return a.id - b.id;
   });
+}
+
+const ApplicationRow = memo(function ApplicationRow({
+  app,
+  onSelect,
+}: {
+  app: Application;
+  onSelect: (app: Application) => void;
+}) {
+  return (
+    <button type="button" className="application-row" onClick={() => onSelect(app)}>
+      <div>
+        <h3>{app.company}</h3>
+        <p>{app.role}</p>
+      </div>
+      <div className="application-meta">
+        <span>{app.stage}</span>
+        <span>Last touch {formatRelative(app.lastTouchAt)}</span>
+      </div>
+    </button>
+  );
+});
+
+function SkeletonLine({ width = '100%', height = 12 }: { width?: string; height?: number }) {
+  return <div className="skeleton" style={{ width, height }} />;
+}
+
+function SkeletonStack({ count = 3, tall }: { count?: number; tall?: boolean }) {
+  return (
+    <div className="skeleton-stack">
+      {Array.from({ length: count }).map((_, idx) => (
+        <div key={idx} className={tall ? 'skeleton-card' : undefined}>
+          <SkeletonLine width="70%" height={tall ? 16 : 12} />
+          {tall && <SkeletonLine width="40%" height={12} />}
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function parsePayload(payload?: string | null): Record<string, unknown> | null {

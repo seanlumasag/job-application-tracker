@@ -110,9 +110,9 @@ A backend-first internal tool for managing a job search as an operations workflo
    - X Next actions panel (tasks due soon + apps needing follow-up)
    - X Activity trends (7/30 days)
 9. **Phase 8 — Hardening**
-   - Form validation + error states
-   - Empty states + skeleton loading
-   - Performance tuning for large lists
+   - X Form validation + error states
+   - X Empty states + skeleton loading
+   - X Performance tuning for large lists
 10. **Phase 9 — Release**
    - Build + deploy frontend
    - CI checks (lint + tests)

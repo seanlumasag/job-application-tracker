@@ -241,6 +241,12 @@
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+.form-error {
+  margin: 0;
+  color: #7a2f25;
+  font-weight: 600;
+}
+
 .field {
   display: grid;
   gap: 8px;
@@ -500,6 +506,37 @@
 .empty {
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+.skeleton {
+  display: block;
+  background: linear-gradient(90deg, #f1e5d6 0%, #e7d8c2 50%, #f1e5d6 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 999px;
+}
+
+.skeleton-card {
+  border: 1px solid var(--surface-strong);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  background: #fff;
+  display: grid;
+  gap: 8px;
+}
+
+.skeleton-stack {
+  display: grid;
+  gap: 10px;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .ghost {
