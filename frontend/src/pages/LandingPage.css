@@ -196,8 +196,12 @@
   color: #1c0f3b;
 }
 
+.hero-copy h1 .headline-line {
+  display: block;
+}
+
 .hero-copy .emoji {
-  margin-left: 12px;
+  margin: 0 8px;
   font-size: 42px;
 }
 

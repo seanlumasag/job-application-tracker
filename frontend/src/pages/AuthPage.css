@@ -40,11 +40,12 @@
 }
 
 .auth-shell {
-  width: min(1100px, 100%);
+  width: min(520px, 100%);
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 32px;
   align-items: start;
+  justify-items: center;
+  margin-inline: auto;
   position: relative;
   z-index: 1;
 }
@@ -67,6 +68,7 @@
   box-shadow: 0 20px 60px rgba(69, 35, 104, 0.14);
   border: 1px solid #efe9ff;
   backdrop-filter: blur(12px);
+  width: 100%;
 }
 
 .auth-brand {
@@ -172,73 +174,6 @@
   padding: 0;
 }
 
-.auth-aside {
-  display: grid;
-  gap: 20px;
-}
-
-.auth-aside-card {
-  background: #1f123d;
-  color: #f7f2ff;
-  border-radius: 24px;
-  padding: 28px;
-  box-shadow: 0 20px 60px rgba(54, 22, 112, 0.24);
-}
-
-.auth-quote {
-  margin: 0 0 24px;
-  font-size: 1.1rem;
-  line-height: 1.5;
-}
-
-.auth-person {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.auth-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: #f9f6ff;
-  color: #1f123d;
-  display: grid;
-  place-items: center;
-  font-weight: 700;
-}
-
-.auth-person-name {
-  font-weight: 600;
-}
-
-.auth-person-role {
-  font-size: 0.85rem;
-  color: rgba(247, 242, 255, 0.7);
-}
-
-.auth-metrics {
-  display: grid;
-  gap: 16px;
-}
-
-.auth-metrics > div {
-  background: rgba(255, 255, 255, 0.88);
-  border-radius: 18px;
-  padding: 18px;
-  border: 1px solid #efe9ff;
-  box-shadow: 0 16px 40px rgba(69, 35, 104, 0.08);
-}
-
-.auth-metric-value {
-  font-size: 1.6rem;
-  font-weight: 700;
-}
-
-.auth-metric-copy {
-  color: #5c4a7a;
-  font-size: 0.9rem;
-}
 
 @media (max-width: 900px) {
   .auth-page {

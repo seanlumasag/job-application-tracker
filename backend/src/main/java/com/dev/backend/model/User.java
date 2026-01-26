@@ -36,13 +36,13 @@ public class User {
     @Column(name = "password_hash", nullable = false, length = 100)
     private String passwordHash;
 
-    @Column(name = "email_verified", nullable = false)
+    @Column(name = "email_verified", nullable = false, columnDefinition = "boolean default false")
     private boolean emailVerified;
 
     @Column(name = "email_verified_at")
     private LocalDateTime emailVerifiedAt;
 
-    @Column(name = "mfa_enabled", nullable = false)
+    @Column(name = "mfa_enabled", nullable = false, columnDefinition = "boolean default false")
     private boolean mfaEnabled;
 
     @Column(name = "mfa_secret", length = 128)

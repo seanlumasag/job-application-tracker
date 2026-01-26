@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
+import AppLayout from '../pages/AppLayout';
 import AppPage from '../pages/AppPage';
+import ApplicationsPage from '../pages/ApplicationsPage';
+import ApplicationDetailPage from '../pages/ApplicationDetailPage';
 import LandingPage from '../pages/LandingPage';
 import AuthPage from '../pages/AuthPage';
 
@@ -34,7 +37,17 @@ function Router() {
   const isSignUp = path === '/signup';
 
   if (isAppRoute) {
-    return <AppPage />;
+    const appChild =
+      path === '/app'
+        ? <AppPage />
+        : path === '/app/applications'
+          ? <ApplicationsPage />
+          : <ApplicationDetailPage />;
+    return (
+      <AppLayout routePath={path} onNavigate={navigate}>
+        {appChild}
+      </AppLayout>
+    );
   }
 
   if (isSignIn) {

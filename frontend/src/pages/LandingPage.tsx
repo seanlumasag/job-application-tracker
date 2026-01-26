@@ -219,9 +219,10 @@ function LandingPage({ onNavigate }: LandingPageProps) {
         <section className="landing-hero">
           <div className="hero-copy">
             <h1>
-              JobTrack is your team&apos;s collective
-              <span className="emoji">🧠</span>
-              tracker.
+              <span className="headline-line">JobTrack is your Career&apos;s</span>
+              <span className="headline-line">
+                collective <span className="emoji">🧠</span> tracker.
+              </span>
             </h1>
             <p className="lede">
               Move faster and stay organized across every application, recruiter,

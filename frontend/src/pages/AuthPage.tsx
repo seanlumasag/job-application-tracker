@@ -106,31 +106,6 @@ function AuthPage({ mode, onNavigate }: AuthPageProps) {
             </button>
           </div>
         </div>
-        <div className="auth-aside">
-          <div className="auth-aside-card">
-            <p className="auth-quote">
-              “JobTrack keeps my pipeline and follow-ups in one place. I finally
-              know what to do next.”
-            </p>
-            <div className="auth-person">
-              <span className="auth-avatar">AL</span>
-              <div>
-                <div className="auth-person-name">Avery Lee</div>
-                <div className="auth-person-role">Product designer</div>
-              </div>
-            </div>
-          </div>
-          <div className="auth-metrics">
-            <div>
-              <div className="auth-metric-value">3.2x</div>
-              <div className="auth-metric-copy">more interviews tracked</div>
-            </div>
-            <div>
-              <div className="auth-metric-value">24h</div>
-              <div className="auth-metric-copy">average follow-up cycle</div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
