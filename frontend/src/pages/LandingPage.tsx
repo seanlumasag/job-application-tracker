@@ -163,7 +163,8 @@ function LandingPage({ onNavigate }: LandingPageProps) {
     onNavigate(target);
   };
 
-  const handleAppCTA = () => handleNavigate('/app');
+  const handleAppCTA = () => handleNavigate('/signup');
+  const handleSignIn = () => handleNavigate('/signin');
   const handleKeyNavigate = (event: KeyboardEvent<HTMLElement>, target: string) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -202,21 +203,13 @@ function LandingPage({ onNavigate }: LandingPageProps) {
           </button>
         </nav>
         <div className="nav-actions">
-          <button className="ghost" type="button" onClick={handleAppCTA}>
+          <button className="ghost" type="button" onClick={handleSignIn}>
             Sign in
           </button>
-          <button
-            className="outlined"
-            type="button"
-            onClick={handleAppCTA}
-          >
+          <button className="outlined" type="button" onClick={handleAppCTA}>
             Request a demo
           </button>
-          <button
-            className="filled"
-            type="button"
-            onClick={handleAppCTA}
-          >
+          <button className="filled" type="button" onClick={handleAppCTA}>
             Get started
           </button>
         </div>

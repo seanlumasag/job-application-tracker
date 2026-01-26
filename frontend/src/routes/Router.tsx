@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import App from './App';
-import LandingPage from './LandingPage';
+import AppPage from '../pages/AppPage';
+import LandingPage from '../pages/LandingPage';
+import AuthPage from '../pages/AuthPage';
 
 const normalizePath = (path: string) => {
   if (!path) return '/';
@@ -29,9 +30,19 @@ function Router() {
   );
 
   const isAppRoute = path === '/app' || path.startsWith('/app/');
+  const isSignIn = path === '/signin';
+  const isSignUp = path === '/signup';
 
   if (isAppRoute) {
-    return <App />;
+    return <AppPage />;
+  }
+
+  if (isSignIn) {
+    return <AuthPage mode="signin" onNavigate={navigate} />;
+  }
+
+  if (isSignUp) {
+    return <AuthPage mode="signup" onNavigate={navigate} />;
   }
 
   return <LandingPage onNavigate={navigate} />;

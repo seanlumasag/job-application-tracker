@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState, memo } from 'react';
-import { apiClient } from './lib/apiClient';
-import { applicationService, type ApplicationPayload } from './services/applicationService';
-import { authService } from './services/authService';
-import { dashboardService } from './services/dashboardService';
-import { taskService, type TaskPayload } from './services/taskService';
-import { auditService } from './services/auditService';
+import { apiClient } from '../lib/apiClient';
+import { applicationService, type ApplicationPayload } from '../services/applicationService';
+import { authService } from '../services/authService';
+import { dashboardService } from '../services/dashboardService';
+import { taskService, type TaskPayload } from '../services/taskService';
+import { auditService } from '../services/auditService';
 import type {
   Application,
   AuthResponse,
@@ -16,8 +16,8 @@ import type {
   Task,
   TaskStatus,
   AuditEvent,
-} from './types';
-import './App.css';
+} from '../types';
+import './AppPage.css';
 
 const STAGES: Stage[] = ['SAVED', 'APPLIED', 'INTERVIEW', 'OFFER', 'REJECTED', 'WITHDRAWN'];
 const STAGE_TRANSITIONS: Record<Stage, Stage[]> = {
