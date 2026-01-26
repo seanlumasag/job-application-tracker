@@ -98,9 +98,6 @@ public class ApplicationService {
         if (currentStage == nextStage) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Stage is already set");
         }
-        if (!currentStage.canTransitionTo(nextStage)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid stage transition");
-        }
         LocalDateTime now = LocalDateTime.now();
         application.setStage(nextStage);
         application.setLastTouchAt(now);

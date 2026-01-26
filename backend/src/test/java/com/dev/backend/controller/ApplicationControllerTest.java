@@ -338,30 +338,6 @@ class ApplicationControllerTest {
         assertThat(event.getToStage()).isEqualTo(Stage.APPLIED);
     }
 
-    @Test
-    void stageTransitionRejectsInvalidJump() throws Exception {
-        User owner = createUser("stage-invalid-jump@example.com");
-        Application application = createApplication(owner.getId(), "BadJumpCo", "Engineer");
-        application.setStage(Stage.REJECTED);
-        applicationRepository.save(application);
-
-        String payload = """
-                {
-                  "stage": "OFFER"
-                }
-                """;
-
-        mockMvc.perform(patch("/api/applications/{id}/stage", application.getId())
-                        .header(HttpHeaders.AUTHORIZATION, bearerToken(owner))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(payload))
-                .andExpect(status().isBadRequest());
-
-        Application unchanged = applicationRepository.findById(application.getId()).orElseThrow();
-        assertThat(unchanged.getStage()).isEqualTo(Stage.REJECTED);
-        assertThat(stageEventRepository.findAllByApplicationUserId(owner.getId())).isEmpty();
-    }
-
     private User createUser(String email) {
         User user = new User();
         user.setEmail(email);
