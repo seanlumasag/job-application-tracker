@@ -27,14 +27,6 @@ function ApplicationsPage() {
         <div className="header-actions">
           <button
             type="button"
-            className="text-button"
-            onClick={() => refreshApplications()}
-            disabled={loading}
-          >
-            Refresh
-          </button>
-          <button
-            type="button"
             className="primary"
             onClick={() => setShowForm((prev) => !prev)}
           >
@@ -108,7 +100,7 @@ function ApplicationsPage() {
           className={stageFilter === 'ALL' ? 'active' : ''}
           onClick={() => setStageFilter('ALL')}
         >
-          All
+          ALL
         </button>
         {STAGES.map((stage) => (
           <button
@@ -117,7 +109,7 @@ function ApplicationsPage() {
             className={stageFilter === stage ? 'active' : ''}
             onClick={() => setStageFilter(stage)}
           >
-            {stage}
+            {stage === 'INTERVIEW' ? 'INTERVIEWING' : stage}
           </button>
         ))}
       </div>

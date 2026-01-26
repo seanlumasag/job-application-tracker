@@ -25,7 +25,14 @@ function AppPage() {
         </div>
       </div>
 
-      <div className="board-columns">
+      <div
+        className="board-columns"
+        onDragLeave={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
+            setDropStage(null);
+          }
+        }}
+      >
         {boardStages.map((column) => {
           const columnApps = safeVisibleApplications.filter((app) => app.stage === column.stage);
           return (
@@ -47,9 +54,10 @@ function AppPage() {
                     setDropStage(column.stage);
                   }
                 }}
-                onDragLeave={() => {
-                  if (dropStage === column.stage) {
-                    setDropStage(null);
+                onDragEnter={(event) => {
+                  event.preventDefault();
+                  if (dropStage !== column.stage) {
+                    setDropStage(column.stage);
                   }
                 }}
                 onDrop={(event) => {
@@ -62,6 +70,9 @@ function AppPage() {
                   setDropStage(null);
                 }}
               >
+                <button type="button" className="board-empty" onClick={goToApplications}>
+                  Add Job
+                </button>
                 {columnApps.length ? (
                   columnApps.map((app) => (
                     <button
@@ -75,7 +86,10 @@ function AppPage() {
                         event.dataTransfer.effectAllowed = 'move';
                         setDraggingId(app.id);
                       }}
-                      onDragEnd={() => setDraggingId(null)}
+                      onDragEnd={() => {
+                        setDraggingId(null);
+                        setDropStage(null);
+                      }}
                     >
                       <div className="card-title">{app.role}</div>
                       <div className="card-sub">{app.company}</div>
@@ -86,11 +100,7 @@ function AppPage() {
                       <div className="card-meta">Last touch {formatRelative(app.lastTouchAt)}</div>
                     </button>
                   ))
-                ) : (
-                  <button type="button" className="board-empty" onClick={goToApplications}>
-                    Add Job
-                  </button>
-                )}
+                ) : null}
               </div>
             </div>
           );

@@ -165,6 +165,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
   const [error, setError] = useState('');
   const [authMode, setAuthMode] = useState<AuthMode>('login');
   const [email, setEmail] = useState('');
+  const [profileEmail, setProfileEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authBusy, setAuthBusy] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
@@ -219,11 +220,20 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
       setSelectedAuditEvent(null);
       setAuditLoading(false);
       setError('');
+      setProfileEmail('');
       return;
     }
     refreshDashboard();
     loadAuditEvents();
     loadStaleApplications(staleDays);
+    void (async () => {
+      try {
+        const me = await authService.me();
+        setProfileEmail(me.email);
+      } catch {
+        setProfileEmail('');
+      }
+    })();
   }, [token]);
 
   useEffect(() => {
@@ -324,7 +334,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     setToken('');
     setSelectedApp(null);
     setStageFilter('ALL');
-    goToDashboard();
+    onNavigate('/signin');
   };
 
   const refreshApplications = async (targetStage: Stage | 'ALL' = stageFilter) => {
@@ -363,46 +373,46 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     return '';
   };
 
-  async function loadStageEvents(applicationId: number) {
+  async function loadStageEvents(applicationId: number, silent = false) {
     setStageEventsLoading(true);
     try {
       const events = await applicationService.listStageEvents(applicationId);
       setStageEvents(events);
-      setError('');
+      if (!silent) setError('');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load stage history';
-      setError(message);
+      if (!silent) setError(message);
       setStageEvents([]);
     } finally {
       setStageEventsLoading(false);
     }
   }
 
-  async function loadTasks(applicationId: number) {
+  async function loadTasks(applicationId: number, silent = false) {
     setTasksLoading(true);
     try {
       const taskList = await taskService.listForApplication(applicationId);
       setTasks(taskList);
-      setError('');
+      if (!silent) setError('');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load tasks';
-      setError(message);
+      if (!silent) setError(message);
       setTasks([]);
     } finally {
       setTasksLoading(false);
     }
   }
 
-  async function loadAuditEvents() {
+  async function loadAuditEvents(silent = false) {
     setAuditLoading(true);
     try {
       const events = await auditService.list(0, 25);
       setAuditEvents(events);
       setSelectedAuditEvent((prev) => prev ?? events[0] ?? null);
-      setError('');
+      if (!silent) setError('');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load activity feed';
-      setError(message);
+      if (!silent) setError(message);
       setAuditEvents([]);
       setSelectedAuditEvent(null);
     } finally {
@@ -410,15 +420,15 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     }
   }
 
-  async function loadStaleApplications(days: number) {
+  async function loadStaleApplications(days: number, silent = false) {
     setStaleLoading(true);
     try {
       const apps = await applicationService.listStale(days);
       setStaleApplications(apps);
-      setError('');
+      if (!silent) setError('');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load stale applications';
-      setError(message);
+      if (!silent) setError(message);
       setStaleApplications([]);
     } finally {
       setStaleLoading(false);
@@ -615,11 +625,6 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     if (current.stage === nextStage) {
       return;
     }
-    const allowed = STAGE_TRANSITIONS[current.stage] ?? [];
-    if (!allowed.includes(nextStage)) {
-      setError(`Cannot move from ${current.stage} to ${nextStage}.`);
-      return;
-    }
 
     const previousApps = applications;
     const optimisticApp = { ...current, stage: nextStage, stageChangedAt: new Date().toISOString() };
@@ -634,10 +639,10 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
       setApplications((prev) => prev.map((app) => (app.id === updated.id ? updated : app)));
       if (selectedApp?.id === updated.id) {
         setSelectedApp(updated);
-        await loadStageEvents(updated.id);
+        await loadStageEvents(updated.id, true);
       }
-      await loadAuditEvents();
-      await loadStaleApplications(staleDays);
+      await loadAuditEvents(true);
+      await loadStaleApplications(staleDays, true);
     } catch (err) {
       setApplications(previousApps);
       if (selectedApp?.id === appId) {
@@ -681,7 +686,8 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     const startOfWeek = startOfWeekMonday(new Date());
     const startOfNextWeek = addDays(startOfWeek, 7);
 
-    return tasks.filter((task) => {
+    const safeTasks = Array.isArray(tasks) ? tasks : [];
+    return safeTasks.filter((task) => {
       const due = task.dueAt ? new Date(task.dueAt) : null;
       switch (taskFilter) {
         case 'DUE_TODAY':
@@ -710,7 +716,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
   };
 
   const boardStages: Array<{ stage: Stage; label: string; tone: string }> = [
-    { stage: 'SAVED', label: 'Wish List', tone: 'sky' },
+    { stage: 'SAVED', label: 'Saved', tone: 'sky' },
     { stage: 'APPLIED', label: 'Applied', tone: 'violet' },
     { stage: 'INTERVIEW', label: 'Interviewing', tone: 'green' },
     { stage: 'OFFER', label: 'Offer', tone: 'gold' },
@@ -813,6 +819,9 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
             <div className="app-mark">JT</div>
             <div>
               <div className="sidebar-title">JobTrack</div>
+              {token && (profileEmail || email) ? (
+                <div className="sidebar-sub">{profileEmail || email}</div>
+              ) : null}
             </div>
           </button>
           <nav className="sidebar-nav">
@@ -838,7 +847,10 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
           <div className="sidebar-footer">
             {token ? (
               <>
-                <button type="button" className="ghost" onClick={handleLogout}>
+                <button type="button" className="ghost" onClick={goToSettings}>
+                  Account settings
+                </button>
+                <button type="button" className="text-button" onClick={handleLogout}>
                   Log out
                 </button>
               </>
@@ -851,7 +863,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
         <div className="app-body">
           <header className="board-topbar">
             <div>
-              <div className="board-title">Job Hunt 2026</div>
+              <div className="board-title">Your Job Application Tracker</div>
               <div className="board-subtitle">
               {view === 'applications'
                 ? 'Applications'

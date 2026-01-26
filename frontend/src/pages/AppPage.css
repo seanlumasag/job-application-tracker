@@ -514,12 +514,15 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
+  min-height: 200px;
 }
 
 .board-column-body.is-drop-target {
   background: rgba(90, 58, 216, 0.08);
   border-radius: 12px;
-  padding: 8px;
+  outline: 2px dashed rgba(90, 58, 216, 0.35);
+  outline-offset: 4px;
 }
 
 .board-card {
@@ -1069,6 +1072,7 @@
   padding: 16px;
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 12px;
   background: #fff;
   cursor: pointer;
@@ -1100,7 +1104,7 @@
   color: #4f5766;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 
 .stage-saved {
