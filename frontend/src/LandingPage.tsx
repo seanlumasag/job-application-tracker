@@ -1,8 +1,45 @@
+import type { KeyboardEvent } from 'react';
 import './LandingPage.css';
 
 type LandingPageProps = {
   onNavigate: (path: string) => void;
 };
+
+const linkTargets: Record<string, string> = {
+  Features: '#features',
+  Solutions: '#solutions',
+  Pricing: '#tiers',
+  Overview: '#top',
+  Status: '/app',
+  Changelog: '/app',
+  Releases: '/app',
+  'AI copilots': '#features',
+  Huddles: '#features',
+  Search: '#solutions',
+  Automations: '#features',
+  Integrations: '#solutions',
+  Teams: '#solutions',
+  'Solo searchers': '#solutions',
+  'Career switchers': '#solutions',
+  'Bootcamp grads': '#solutions',
+  Recruiters: '#solutions',
+  'Help center': '/app',
+  Blog: '/app',
+  Templates: '/app',
+  Community: '/app',
+  Events: '/app',
+  About: '/app',
+  Careers: '/app',
+  Press: '/app',
+  Brand: '/app',
+  Contact: '#footer',
+  'Download JobTrack': '/app',
+  Privacy: '/app',
+  Terms: '/app',
+  'Cookie preferences': '/app',
+};
+
+const resolveTarget = (label: string) => linkTargets[label] ?? '/app';
 
 const partnerLogos = ['gm', 'OpenAI', 'P Paramount', 'stripe', 'IBM'];
 const featurePills = [
@@ -12,6 +49,8 @@ const featurePills = [
   { label: 'Ask an agent', icon: '🤖' },
   { label: 'Automate tasks', icon: '✨' },
 ];
+
+const featureRows = [featurePills.slice(0, 3), featurePills.slice(3)];
 
 const aiTasks = [
   'Summarize recruiter threads automatically',
@@ -43,6 +82,49 @@ const stats = [
   },
 ];
 
+const pricingTiers = [
+  {
+    name: 'Starter',
+    price: '$19',
+    cadence: 'per month',
+    summary: 'Solo searchers and side projects.',
+    highlights: [
+      'Unlimited applications',
+      'Interview timeline',
+      'Basic AI summaries',
+      'Email reminders',
+    ],
+    cta: 'Start free',
+  },
+  {
+    name: 'Growth',
+    price: '$49',
+    cadence: 'per month',
+    summary: 'Teams coordinating across recruiters.',
+    highlights: [
+      'Everything in Starter',
+      'Shared recruiter inbox',
+      'AI follow-up drafts',
+      'Pipeline analytics',
+    ],
+    cta: 'Upgrade to Growth',
+    featured: true,
+  },
+  {
+    name: 'Scale',
+    price: '$99',
+    cadence: 'per month',
+    summary: 'Organizations running multi-team searches.',
+    highlights: [
+      'Everything in Growth',
+      'Custom CRM sync',
+      'Audit + compliance',
+      'Dedicated success lead',
+    ],
+    cta: 'Talk to sales',
+  },
+];
+
 const footerColumns = [
   {
     heading: 'Product',
@@ -67,13 +149,41 @@ const footerColumns = [
 ];
 
 function LandingPage({ onNavigate }: LandingPageProps) {
+  const handleNavigate = (target: string) => {
+    if (target.startsWith('#')) {
+      const sectionId = target.slice(1);
+      const section = document.getElementById(sectionId);
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.history.replaceState(null, '', `#${sectionId}`);
+      }
+      return;
+    }
+
+    onNavigate(target);
+  };
+
+  const handleAppCTA = () => handleNavigate('/app');
+  const handleKeyNavigate = (event: KeyboardEvent<HTMLElement>, target: string) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleNavigate(target);
+    }
+  };
+
   return (
-    <div className="landing">
+    <div className="landing" id="top">
       <div className="landing-bg landing-bg-left" />
       <div className="landing-bg landing-bg-right" />
 
       <header className="landing-nav">
-        <div className="brand">
+        <div
+          className="brand"
+          role="button"
+          tabIndex={0}
+          onClick={() => handleNavigate('#top')}
+          onKeyDown={(event) => handleKeyNavigate(event, '#top')}
+        >
           <div className="brand-mark">JT</div>
           <div className="brand-copy">
             <span className="brand-name">JobTrack</span>
@@ -81,31 +191,31 @@ function LandingPage({ onNavigate }: LandingPageProps) {
           </div>
         </div>
         <nav className="nav-links">
-          <button className="link-button" type="button">
+          <button className="link-button" type="button" onClick={() => handleNavigate(resolveTarget('Features'))}>
             Features
           </button>
-          <button className="link-button" type="button">
+          <button className="link-button" type="button" onClick={() => handleNavigate(resolveTarget('Solutions'))}>
             Solutions
           </button>
-          <button className="link-button" type="button">
+          <button className="link-button" type="button" onClick={() => handleNavigate(resolveTarget('Pricing'))}>
             Pricing
           </button>
         </nav>
         <div className="nav-actions">
-          <button className="ghost" type="button">
+          <button className="ghost" type="button" onClick={handleAppCTA}>
             Sign in
           </button>
           <button
             className="outlined"
             type="button"
-            onClick={() => onNavigate('/app')}
+            onClick={handleAppCTA}
           >
             Request a demo
           </button>
           <button
             className="filled"
             type="button"
-            onClick={() => onNavigate('/app')}
+            onClick={handleAppCTA}
           >
             Get started
           </button>
@@ -128,14 +238,14 @@ function LandingPage({ onNavigate }: LandingPageProps) {
               <button
                 className="filled"
                 type="button"
-                onClick={() => onNavigate('/app')}
+                onClick={handleAppCTA}
               >
                 Get started
               </button>
               <button
                 className="secondary"
                 type="button"
-                onClick={() => onNavigate('/app')}
+                onClick={() => handleNavigate(resolveTarget('Pricing'))}
               >
                 Find your plan →
               </button>
@@ -197,9 +307,9 @@ function LandingPage({ onNavigate }: LandingPageProps) {
                       <div className="channel-label"># product-launch</div>
                       <div className="channel-meta">35 members · 6 pinned</div>
                     </div>
-                    <button className="pill ghost" type="button">
-                      Join channel
-                    </button>
+                  <button className="pill ghost" type="button" onClick={handleAppCTA}>
+                    Join channel
+                  </button>
                   </div>
                   <div className="message-card">
                     <div className="avatar blue">MB</div>
@@ -249,17 +359,21 @@ function LandingPage({ onNavigate }: LandingPageProps) {
               </div>
             </div>
             <div className="feature-pills">
-              {featurePills.map((pill) => (
-                <span key={pill.label} className="pill">
-                  <span className="pill-icon">{pill.icon}</span>
-                  {pill.label}
-                </span>
+              {featureRows.map((row, rowIndex) => (
+                <div key={`feature-row-${rowIndex}`} className="feature-row">
+                  {row.map((pill) => (
+                    <span key={pill.label} className="pill">
+                      <span className="pill-icon">{pill.icon}</span>
+                      {pill.label}
+                    </span>
+                  ))}
+                </div>
               ))}
             </div>
           </div>
         </section>
 
-        <section className="ai-section">
+        <section className="ai-section" id="features">
           <div className="ai-shell">
             <div className="ai-copy">
               <h2>Reimagine what&apos;s possible with AI and copilots.</h2>
@@ -289,7 +403,7 @@ function LandingPage({ onNavigate }: LandingPageProps) {
                     </span>
                     AI Notes: Off
                   </div>
-                  <button className="ai-transcribe" type="button">
+                  <button className="ai-transcribe" type="button" onClick={handleAppCTA}>
                     Start AI Notes &amp; Transcription
                   </button>
                 </div>
@@ -321,7 +435,7 @@ function LandingPage({ onNavigate }: LandingPageProps) {
           </div>
         </section>
 
-        <section className="context-section">
+        <section className="context-section" id="solutions">
           <div className="context-shell">
             <div className="context-heading">
               <h2>
@@ -348,7 +462,11 @@ function LandingPage({ onNavigate }: LandingPageProps) {
                           </p>
                         )}
                         {idx === 1 && (
-                          <button className="text-link" type="button">
+                          <button
+                            className="text-link"
+                            type="button"
+                            onClick={() => handleNavigate(resolveTarget('Search'))}
+                          >
                             Learn about AI search →
                           </button>
                         )}
@@ -406,9 +524,15 @@ function LandingPage({ onNavigate }: LandingPageProps) {
                       <span className="link">Launch checklist</span> for owners and timing.
                     </p>
                     <div className="answer-buttons">
-                      <button type="button">Share</button>
-                      <button type="button">Sources</button>
-                      <button type="button">Copy</button>
+                      <button type="button" onClick={handleAppCTA}>
+                        Share
+                      </button>
+                      <button type="button" onClick={handleAppCTA}>
+                        Sources
+                      </button>
+                      <button type="button" onClick={handleAppCTA}>
+                        Copy
+                      </button>
                     </div>
                   </div>
 
@@ -460,7 +584,7 @@ function LandingPage({ onNavigate }: LandingPageProps) {
           </div>
         </section>
 
-        <section className="stats-section">
+        <section className="stats-section" id="stats">
           <div className="stats-shell">
             <h2>We&apos;re in the business of growing careers.</h2>
             <div className="stats-grid">
@@ -474,10 +598,51 @@ function LandingPage({ onNavigate }: LandingPageProps) {
           </div>
         </section>
 
-        <footer className="footer">
+        <section className="pricing-section" id="tiers">
+          <div className="pricing-shell">
+            <div className="pricing-header">
+              <h2>Plans built for every stage of the search.</h2>
+              <p>
+                Pick a tier that matches your momentum. Every plan comes with
+                smart reminders, shared notes, and the JobTrack AI assistant.
+              </p>
+            </div>
+            <div className="pricing-grid">
+              {pricingTiers.map((tier) => (
+                <div
+                  key={tier.name}
+                  className={`pricing-card${tier.featured ? ' featured' : ''}`}
+                >
+                  <div className="pricing-top">
+                    <div className="pricing-name">{tier.name}</div>
+                    {tier.featured && <span className="pricing-badge">Most popular</span>}
+                  </div>
+                  <div className="pricing-price">
+                    <span className="amount">{tier.price}</span>
+                    <span className="cadence">{tier.cadence}</span>
+                  </div>
+                  <p className="pricing-summary">{tier.summary}</p>
+                  <ul className="pricing-features">
+                    {tier.highlights.map((item) => (
+                      <li key={item}>
+                        <span className="check">✓</span>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                  <button type="button" className="pricing-cta" onClick={handleAppCTA}>
+                    {tier.cta}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <footer className="footer" id="footer">
           <div className="footer-shell">
             <div className="footer-top">
-              <button className="region" type="button">
+              <button className="region" type="button" onClick={handleAppCTA}>
                 🌐 Change region ▾
               </button>
               <div className="footer-social">
@@ -490,7 +655,13 @@ function LandingPage({ onNavigate }: LandingPageProps) {
             </div>
 
             <div className="footer-columns">
-              <div className="footer-brand">
+              <div
+                className="footer-brand"
+                role="button"
+                tabIndex={0}
+                onClick={() => handleNavigate(resolveTarget('Overview'))}
+                onKeyDown={(event) => handleKeyNavigate(event, resolveTarget('Overview'))}
+              >
                 <div className="brand-mark">JT</div>
                 <div className="brand-copy">
                   <span className="brand-name">JobTrack</span>
@@ -503,7 +674,11 @@ function LandingPage({ onNavigate }: LandingPageProps) {
                   <ul>
                     {col.links.map((link) => (
                       <li key={link}>
-                        <button type="button" className="footer-link">
+                        <button
+                          type="button"
+                          className="footer-link"
+                          onClick={() => handleNavigate(resolveTarget(link))}
+                        >
                           {link}
                         </button>
                       </li>
@@ -515,16 +690,32 @@ function LandingPage({ onNavigate }: LandingPageProps) {
 
             <div className="footer-bottom">
               <div className="footer-links">
-                <button type="button" className="footer-link">
+                <button
+                  type="button"
+                  className="footer-link"
+                  onClick={() => handleNavigate(resolveTarget('Download JobTrack'))}
+                >
                   Download JobTrack
                 </button>
-                <button type="button" className="footer-link">
+                <button
+                  type="button"
+                  className="footer-link"
+                  onClick={() => handleNavigate(resolveTarget('Privacy'))}
+                >
                   Privacy
                 </button>
-                <button type="button" className="footer-link">
+                <button
+                  type="button"
+                  className="footer-link"
+                  onClick={() => handleNavigate(resolveTarget('Terms'))}
+                >
                   Terms
                 </button>
-                <button type="button" className="footer-link">
+                <button
+                  type="button"
+                  className="footer-link"
+                  onClick={() => handleNavigate(resolveTarget('Cookie preferences'))}
+                >
                   Cookie preferences
                 </button>
               </div>

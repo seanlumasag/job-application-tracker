@@ -1,7 +1,7 @@
 .landing {
   position: relative;
   min-height: 100vh;
-  padding: 24px 24px 64px;
+  padding: 24px 24px 0;
   overflow: hidden;
   background: radial-gradient(circle at 20% 20%, rgba(131, 90, 255, 0.12), transparent 36%),
     radial-gradient(circle at 80% 40%, rgba(138, 223, 188, 0.16), transparent 40%),
@@ -57,6 +57,7 @@
   gap: 10px;
   font-weight: 700;
   letter-spacing: -0.4px;
+  cursor: pointer;
 }
 
 .brand-mark {
@@ -536,15 +537,24 @@
 
 .feature-pills {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  margin: 0 auto;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.feature-row {
+  display: flex;
   gap: 12px;
   justify-content: center;
-  padding: 8px 12px;
-  background: #f7f5ff;
-  border: 1px solid #ebe3ff;
-  border-radius: 50px;
-  box-shadow: 0 10px 30px rgba(42, 18, 92, 0.08);
-  width: min(100%, 840px);
+  flex-wrap: nowrap;
 }
 
 .pill-icon {
@@ -1092,12 +1102,163 @@
   font-weight: 600;
 }
 
+.pricing-section {
+  padding: 80px 24px 100px;
+}
+
+.pricing-shell {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  gap: 32px;
+}
+
+.pricing-header {
+  text-align: center;
+  display: grid;
+  gap: 12px;
+}
+
+.pricing-header h2 {
+  margin: 0;
+  font-size: 34px;
+  letter-spacing: -0.8px;
+  color: #1c0f3b;
+}
+
+.pricing-header p {
+  margin: 0;
+  color: #4d3f6e;
+  line-height: 1.6;
+  font-size: 16px;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.pricing-card {
+  background: #ffffffd8;
+  border: 1px solid #efe9ff;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 16px 40px rgba(69, 35, 104, 0.08);
+  display: grid;
+  gap: 16px;
+  backdrop-filter: blur(12px);
+}
+
+.pricing-card.featured {
+  border-color: #c8b1ff;
+  box-shadow: 0 18px 50px rgba(104, 39, 196, 0.2);
+  transform: translateY(-6px);
+}
+
+.pricing-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.pricing-name {
+  font-weight: 700;
+  font-size: 18px;
+  color: #2c1a50;
+}
+
+.pricing-badge {
+  background: #f0eaff;
+  color: #5f35b8;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.pricing-price {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.pricing-price .amount {
+  font-size: 34px;
+  font-weight: 700;
+  color: #1c0f3b;
+}
+
+.pricing-price .cadence {
+  font-size: 13px;
+  color: #6a5b90;
+}
+
+.pricing-summary {
+  margin: 0;
+  color: #4d3f6e;
+}
+
+.pricing-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+  color: #3c2d62;
+  font-size: 14px;
+}
+
+.pricing-features li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pricing-features .check {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #e9dcff;
+  display: grid;
+  place-items: center;
+  color: #5c2d91;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.pricing-cta {
+  border-radius: 12px;
+  padding: 12px 16px;
+  border: 1px solid #d2c5ff;
+  background: #fff;
+  color: #3b2564;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.pricing-card.featured .pricing-cta {
+  background: linear-gradient(135deg, #6827c4, #9b58ff);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: 0 12px 30px rgba(104, 39, 196, 0.28);
+}
+
+.pricing-cta:hover {
+  transform: translateY(-1px);
+  border-color: #9b7bff;
+}
+
 .footer {
   background: #f9f7fb;
   border-top: 1px solid #ebe3f7;
   padding: 46px 24px 56px;
   color: #2c1d44;
-  width: 100%;
+  width: calc(100% + 48px);
+  margin-left: -24px;
+  margin-right: -24px;
 }
 
 .footer-shell {
@@ -1142,6 +1303,7 @@
   align-items: center;
   gap: 12px;
   font-weight: 800;
+  cursor: pointer;
 }
 
 .footer-col h3 {
@@ -1205,7 +1367,7 @@
 
 @media (max-width: 720px) {
   .landing {
-    padding: 18px 14px 28px;
+    padding: 18px 14px 0;
   }
 
   .hero-copy h1 {
@@ -1254,6 +1416,10 @@
     grid-template-columns: 1fr;
   }
 
+  .feature-row {
+    flex-wrap: wrap;
+  }
+
   .stats-grid {
     grid-template-columns: 1fr;
     gap: 20px;
@@ -1266,8 +1432,23 @@
     width: calc(100% + 28px);
   }
 
+  .pricing-section {
+    padding: 70px 18px 90px;
+  }
+
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-card.featured {
+    transform: none;
+  }
+
   .footer {
     padding: 40px 18px 48px;
+    margin-left: -14px;
+    margin-right: -14px;
+    width: calc(100% + 28px);
   }
 
   .footer-columns {
