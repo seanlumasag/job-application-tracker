@@ -40,11 +40,8 @@ function AppPage() {
               <div className="board-column-header">
                 <div className="column-title">
                   <span className="column-label">{column.label}</span>
-                  <span className="column-count">{columnApps.length}</span>
                 </div>
-                <button type="button" className="column-add" onClick={goToApplications}>
-                  +
-                </button>
+                <span className="column-count">{columnApps.length}</span>
               </div>
               <div
                 className={`board-column-body${dropStage === column.stage ? ' is-drop-target' : ''}`}
@@ -70,37 +67,40 @@ function AppPage() {
                   setDropStage(null);
                 }}
               >
-                <button type="button" className="board-empty" onClick={goToApplications}>
-                  Add Job
+                {columnApps.map((app) => (
+                  <button
+                    key={app.id}
+                    type="button"
+                    className={`board-card${draggingId === app.id ? ' is-dragging' : ''}`}
+                    onClick={() => showDetail(app)}
+                    draggable
+                    onDragStart={(event) => {
+                      event.dataTransfer.setData('text/plain', String(app.id));
+                      event.dataTransfer.effectAllowed = 'move';
+                      setDraggingId(app.id);
+                    }}
+                    onDragEnd={() => {
+                      setDraggingId(null);
+                      setDropStage(null);
+                    }}
+                  >
+                    <div className="card-title">{app.role}</div>
+                    <div className="card-sub">{app.company}</div>
+                    <div className="card-tags">
+                      {app.location && <span className="tag">{app.location}</span>}
+                      {app.jobUrl && <span className="tag outline">Link</span>}
+                    </div>
+                    <div className="card-meta">Last touch {formatRelative(app.lastTouchAt)}</div>
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  className="board-empty add-button"
+                  onClick={goToApplications}
+                  aria-label="Add job"
+                >
+                  +
                 </button>
-                {columnApps.length ? (
-                  columnApps.map((app) => (
-                    <button
-                      key={app.id}
-                      type="button"
-                      className={`board-card${draggingId === app.id ? ' is-dragging' : ''}`}
-                      onClick={() => showDetail(app)}
-                      draggable
-                      onDragStart={(event) => {
-                        event.dataTransfer.setData('text/plain', String(app.id));
-                        event.dataTransfer.effectAllowed = 'move';
-                        setDraggingId(app.id);
-                      }}
-                      onDragEnd={() => {
-                        setDraggingId(null);
-                        setDropStage(null);
-                      }}
-                    >
-                      <div className="card-title">{app.role}</div>
-                      <div className="card-sub">{app.company}</div>
-                      <div className="card-tags">
-                        {app.location && <span className="tag">{app.location}</span>}
-                        {app.jobUrl && <span className="tag outline">Link</span>}
-                      </div>
-                      <div className="card-meta">Last touch {formatRelative(app.lastTouchAt)}</div>
-                    </button>
-                  ))
-                ) : null}
               </div>
             </div>
           );

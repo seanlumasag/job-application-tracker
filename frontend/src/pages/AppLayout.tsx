@@ -28,14 +28,6 @@ import type {
 import './AppPage.css';
 
 export const STAGES: Stage[] = ['SAVED', 'APPLIED', 'INTERVIEW', 'OFFER', 'REJECTED', 'WITHDRAWN'];
-export const STAGE_TRANSITIONS: Record<Stage, Stage[]> = {
-  SAVED: ['APPLIED', 'WITHDRAWN'],
-  APPLIED: ['INTERVIEW', 'OFFER', 'REJECTED', 'WITHDRAWN'],
-  INTERVIEW: ['OFFER', 'REJECTED', 'WITHDRAWN'],
-  OFFER: ['REJECTED', 'WITHDRAWN'],
-  REJECTED: [],
-  WITHDRAWN: [],
-};
 
 type TaskFilter = 'ALL' | 'DUE_TODAY' | 'DUE_WEEK' | 'OVERDUE' | 'DONE';
 
@@ -116,7 +108,7 @@ type AppContextValue = {
   submitCreate: (event: React.FormEvent) => Promise<void>;
   submitUpdate: (event: React.FormEvent) => Promise<void>;
   submitTask: (event: React.FormEvent) => Promise<void>;
-  refreshApplications: (targetStage?: Stage | 'ALL') => Promise<void>;
+  refreshApplications: (targetStage?: Stage | 'ALL', silent?: boolean) => Promise<void>;
   refreshDashboard: () => Promise<void>;
   loadAuditEvents: () => Promise<void>;
   resetTaskForm: () => void;
@@ -128,6 +120,9 @@ type AppContextValue = {
   showDetail: (app: Application) => void;
   goToDashboard: () => void;
   goToApplications: () => void;
+  goToApplicationsWithCreate: () => void;
+  openCreateFormOnNavigate: boolean;
+  setOpenCreateFormOnNavigate: (value: boolean) => void;
   goToDetail: (appId: number) => void;
   goToTasks: () => void;
   goToMetrics: () => void;
@@ -167,6 +162,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
   const [email, setEmail] = useState('');
   const [profileEmail, setProfileEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [openCreateFormOnNavigate, setOpenCreateFormOnNavigate] = useState(false);
   const [authBusy, setAuthBusy] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
   const [updateBusy, setUpdateBusy] = useState(false);
@@ -203,6 +199,10 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
 
   const goToDashboard = () => onNavigate('/app');
   const goToApplications = () => onNavigate('/app/applications');
+  const goToApplicationsWithCreate = () => {
+    setOpenCreateFormOnNavigate(true);
+    onNavigate('/app/applications');
+  };
   const goToDetail = (appId: number) => onNavigate(`/app/applications/${appId}`);
   const goToTasks = () => onNavigate('/app/tasks');
   const goToMetrics = () => onNavigate('/app/metrics');
@@ -264,9 +264,18 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
       setSelectedApp(null);
       return;
     }
-    const match = applications.find((app) => app.id === routeAppId);
-    setSelectedApp(match ?? null);
-  }, [applications, routeAppId, token]);
+    const appList = Array.isArray(applications) ? applications : [];
+    const match = appList.find((app) => app.id === routeAppId);
+    if (match) {
+      if (!selectedApp || selectedApp.id !== routeAppId) {
+        setSelectedApp(match);
+      }
+      return;
+    }
+    if (selectedApp?.id !== routeAppId) {
+      setSelectedApp(null);
+    }
+  }, [applications, routeAppId, token, selectedApp?.id]);
 
   useEffect(() => {
     if (!selectedApp || !selectedApp.id) {
@@ -337,20 +346,19 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     onNavigate('/signin');
   };
 
-  const refreshApplications = async (targetStage: Stage | 'ALL' = stageFilter) => {
+  const refreshApplications = async (
+    targetStage: Stage | 'ALL' = stageFilter,
+    silent = false,
+  ) => {
     setLoading(true);
     try {
       const apps = await applicationService.list(targetStage === 'ALL' ? undefined : targetStage);
-      setApplications(apps);
-      setSelectedApp((prev) => {
-        if (!prev) return null;
-        const updated = apps.find((app) => app.id === prev.id);
-        return updated ?? prev;
-      });
-      setError('');
+      const nextApps = Array.isArray(apps) ? apps : [];
+      setApplications(nextApps);
+      if (!silent) setError('');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load applications';
-      setError(message);
+      if (!silent) setError(message);
     } finally {
       setLoading(false);
     }
@@ -592,28 +600,46 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
       setError('Stage is already set to that value.');
       return;
     }
-    const allowed = STAGE_TRANSITIONS[selectedApp.stage] ?? [];
-    if (!allowed.includes(nextStage)) {
-      setError(`Cannot move from ${selectedApp.stage} to ${nextStage}.`);
-      return;
-    }
+
+    const appId = selectedApp.id;
+    const previousApp = selectedApp;
+    const previousApps = applications;
+    const optimisticTimestamp = new Date().toISOString();
+    const optimisticApp = {
+      ...selectedApp,
+      stage: nextStage,
+      stageChangedAt: optimisticTimestamp,
+      lastTouchAt: optimisticTimestamp,
+      updatedAt: optimisticTimestamp,
+    };
 
     setTransitionBusy(true);
     setError('');
     try {
-      const updated = await applicationService.transitionStage(selectedApp.id, nextStage);
+      setSelectedApp(optimisticApp);
+      setApplications((prev) =>
+        prev.map((app) => (app.id === optimisticApp.id ? optimisticApp : app)),
+      );
+      const updated = await applicationService.transitionStage(appId, nextStage);
       setSelectedApp(updated);
       setApplications((prev) => prev.map((app) => (app.id === updated.id ? updated : app)));
-      await loadStageEvents(updated.id);
-      await refreshApplications(stageFilter);
-      await loadAuditEvents();
-      await loadStaleApplications(staleDays);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to update stage';
+      const isNetworkError = message.toLowerCase().includes('network');
+      if (!isNetworkError) {
+        setSelectedApp(previousApp);
+        setApplications(previousApps);
+      }
       setError(message);
-    } finally {
       setTransitionBusy(false);
+      void refreshApplications(stageFilter, true);
+      return;
     }
+    setTransitionBusy(false);
+    void loadStageEvents(appId, true);
+    void refreshApplications(stageFilter, true);
+    void loadAuditEvents(true);
+    void loadStaleApplications(staleDays, true);
   };
 
   const moveApplicationStage = async (appId: number, nextStage: Stage) => {
@@ -718,7 +744,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
   const boardStages: Array<{ stage: Stage; label: string; tone: string }> = [
     { stage: 'SAVED', label: 'Saved', tone: 'sky' },
     { stage: 'APPLIED', label: 'Applied', tone: 'violet' },
-    { stage: 'INTERVIEW', label: 'Interviewing', tone: 'green' },
+    { stage: 'INTERVIEW', label: 'Interview', tone: 'green' },
     { stage: 'OFFER', label: 'Offer', tone: 'gold' },
     { stage: 'REJECTED', label: 'Rejected', tone: 'red' },
     { stage: 'WITHDRAWN', label: 'Withdrawn', tone: 'slate' },
@@ -772,6 +798,8 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     staleApplications,
     staleDays,
     staleLoading,
+    openCreateFormOnNavigate,
+    setOpenCreateFormOnNavigate,
     setBoardQuery,
     setStageFilter,
     setActivityWindow,
@@ -797,6 +825,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     showDetail,
     goToDashboard,
     goToApplications,
+    goToApplicationsWithCreate,
     goToDetail,
     goToTasks,
     goToMetrics,
@@ -868,7 +897,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
               {view === 'applications'
                 ? 'Applications'
                 : view === 'detail'
-                  ? 'Application detail'
+                  ? 'Application Detail'
                   : view === 'tasks'
                     ? 'Tasks'
                     : view === 'metrics'
@@ -880,8 +909,13 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
             </div>
             {view === 'dashboard' && (
               <div className="board-actions">
-                <button type="button" className="filled" onClick={goToApplications}>
-                  + Add Job
+                <button
+                  type="button"
+                  className="filled add-button"
+                  onClick={goToApplicationsWithCreate}
+                  aria-label="Add job"
+                >
+                  Add Application
                 </button>
               </div>
             )}

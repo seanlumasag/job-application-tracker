@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ApplicationRow, SkeletonStack, STAGES, useAppContext } from './AppLayout';
 
 function ApplicationsPage() {
@@ -7,15 +7,22 @@ function ApplicationsPage() {
     loading,
     stageFilter,
     setStageFilter,
-    refreshApplications,
     submitCreate,
     createForm,
     createFormError,
     createBusy,
     handleCreateChange,
     showDetail,
+    openCreateFormOnNavigate,
+    setOpenCreateFormOnNavigate,
   } = useAppContext();
   const [showForm, setShowForm] = useState(false);
+
+  useEffect(() => {
+    if (!openCreateFormOnNavigate) return;
+    setShowForm(true);
+    setOpenCreateFormOnNavigate(false);
+  }, [openCreateFormOnNavigate, setOpenCreateFormOnNavigate]);
 
   return (
     <section className="panel">
@@ -30,7 +37,7 @@ function ApplicationsPage() {
             className="primary"
             onClick={() => setShowForm((prev) => !prev)}
           >
-            {showForm ? 'Close' : 'New application'}
+            {showForm ? 'Close' : 'Add Application'}
           </button>
         </div>
       </div>
@@ -109,7 +116,7 @@ function ApplicationsPage() {
             className={stageFilter === stage ? 'active' : ''}
             onClick={() => setStageFilter(stage)}
           >
-            {stage === 'INTERVIEW' ? 'INTERVIEWING' : stage}
+            {stage === 'INTERVIEW' ? 'INTERVIEW' : stage}
           </button>
         ))}
       </div>

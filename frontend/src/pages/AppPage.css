@@ -20,11 +20,13 @@
 
 .app-shell {
   min-height: 100vh;
+  height: 100vh;
   background: var(--app-bg);
   color: var(--app-text);
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .app-sidebar {
@@ -34,6 +36,10 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 .sidebar-brand {
@@ -111,6 +117,8 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 100vh;
+  overflow-y: auto;
 }
 
 .board-topbar {
@@ -437,7 +445,7 @@
   padding: 12px;
   display: flex;
   flex-direction: column;
-  min-height: 360px;
+  min-height: 560px;
   --tone-color: #7b8094;
   --tone-soft: #eef0f5;
 }
@@ -515,7 +523,7 @@
   flex-direction: column;
   gap: 12px;
   flex: 1;
-  min-height: 200px;
+  min-height: 380px;
 }
 
 .board-column-body.is-drop-target {
@@ -591,6 +599,16 @@
   padding: 18px;
   text-align: center;
   cursor: pointer;
+  margin-top: 8px;
+  min-height: 110px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add-button {
+  font-size: 22px;
+  line-height: 1;
 }
 
 @media (max-width: 1100px) {
@@ -606,6 +624,8 @@
 @media (max-width: 900px) {
   .app-shell {
     grid-template-columns: 1fr;
+    height: auto;
+    overflow: visible;
   }
 
   .app-sidebar {
@@ -613,6 +633,9 @@
     flex-wrap: wrap;
     align-items: center;
     gap: 12px;
+    position: static;
+    height: auto;
+    overflow: visible;
   }
 
   .sidebar-nav {
@@ -629,6 +652,11 @@
   .board-topbar {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .app-body {
+    min-height: auto;
+    overflow: visible;
   }
 }
 
@@ -1267,15 +1295,34 @@
 }
 
 .stage-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 12px 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0 4px;
 }
 
 .stage-button {
   border-color: transparent;
-  background: var(--accent-soft);
+  background: #f4f0ff;
+  color: #3b2564;
+  font-weight: 600;
+  justify-content: center;
+  width: 100%;
+}
+
+.stage-button.danger {
+  background: #ffe7e6;
+  color: #7a2f25;
+}
+
+.stage-button.is-current {
+  background: #e2dbff;
+  color: #2b1c4e;
+  cursor: default;
+}
+
+.stage-helper {
+  margin-top: 4px;
 }
 
 .last-touch {

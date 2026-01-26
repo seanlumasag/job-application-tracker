@@ -1,4 +1,4 @@
-import { STAGE_TRANSITIONS, useAppContext } from './AppLayout';
+import { STAGES, useAppContext } from './AppLayout';
 
 function ApplicationDetailPage() {
   const {
@@ -32,7 +32,6 @@ function ApplicationDetailPage() {
     formatRelative,
     loading,
   } = useAppContext();
-
   if (!selectedApp) {
     return (
       <section className="panel detail-panel">
@@ -93,25 +92,24 @@ function ApplicationDetailPage() {
             <h3>Stage controls</h3>
             <span className="stage-chip">{selectedApp.stage}</span>
           </div>
-          <p className="muted">
-            Allowed transitions depend on the current stage. Updates last touch automatically.
-          </p>
+          <p className="muted stage-helper">Choose the next stage for this application.</p>
           <div className="stage-actions">
-            {STAGE_TRANSITIONS[selectedApp.stage].length === 0 ? (
-              <p className="empty">Terminal stage. No further transitions.</p>
-            ) : (
-              STAGE_TRANSITIONS[selectedApp.stage].map((stage) => (
+            {STAGES.map((stage) => {
+              const isCurrent = stage === selectedApp.stage;
+              return (
                 <button
                   key={stage}
                   type="button"
-                  className="ghost stage-button"
-                  disabled={transitionBusy}
+                  className={`ghost stage-button${isCurrent ? ' is-current' : ''}${
+                    stage === 'REJECTED' || stage === 'WITHDRAWN' ? ' danger' : ''
+                  }`}
+                  disabled={transitionBusy || isCurrent}
                   onClick={() => handleStageTransition(stage)}
                 >
-                  Move to {stage}
+                  {stage === 'INTERVIEW' ? 'INTERVIEW' : stage}
                 </button>
-              ))
-            )}
+              );
+            })}
           </div>
         </div>
         <div className="detail-card tasks-card">
