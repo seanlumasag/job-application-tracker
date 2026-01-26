@@ -18,4 +18,6 @@ public interface StageEventRepository extends JpaRepository<StageEvent, Long> {
             Long applicationId,
             Long userId
     );
+
+    void deleteAllByApplicationIdAndApplicationUserId(Long applicationId, Long userId);
 }

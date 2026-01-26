@@ -7,6 +7,7 @@ import com.dev.backend.model.Stage;
 import com.dev.backend.model.StageEvent;
 import com.dev.backend.repository.ApplicationRepository;
 import com.dev.backend.repository.StageEventRepository;
+import com.dev.backend.repository.TaskRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.domain.Sort;
@@ -20,15 +21,18 @@ public class ApplicationService {
 
     private final ApplicationRepository applicationRepository;
     private final StageEventRepository stageEventRepository;
+    private final TaskRepository taskRepository;
     private final AuditService auditService;
 
     public ApplicationService(
             ApplicationRepository applicationRepository,
             StageEventRepository stageEventRepository,
+            TaskRepository taskRepository,
             AuditService auditService
     ) {
         this.applicationRepository = applicationRepository;
         this.stageEventRepository = stageEventRepository;
+        this.taskRepository = taskRepository;
         this.auditService = auditService;
     }
 
@@ -71,9 +75,12 @@ public class ApplicationService {
         return applicationRepository.save(application);
     }
 
+    @Transactional
     public void delete(Long userId, Long applicationId) {
         Application application = applicationRepository.findByIdAndUserId(applicationId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
+        taskRepository.deleteAllByApplicationIdAndApplicationUserId(applicationId, userId);
+        stageEventRepository.deleteAllByApplicationIdAndApplicationUserId(applicationId, userId);
         applicationRepository.delete(application);
     }
 

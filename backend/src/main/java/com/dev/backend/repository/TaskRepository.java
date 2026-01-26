@@ -60,4 +60,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
             java.time.LocalDateTime start,
             java.time.LocalDateTime end
     );
+
+    void deleteAllByApplicationIdAndApplicationUserId(Long applicationId, Long userId);
 }

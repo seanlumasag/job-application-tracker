@@ -124,6 +124,7 @@ type AppContextValue = {
   toggleTaskStatus: (task: Task, nextStatus: TaskStatus) => Promise<void>;
   deleteApplication: () => Promise<void>;
   handleStageTransition: (nextStage: Stage) => Promise<void>;
+  moveApplicationStage: (appId: number, nextStage: Stage) => Promise<void>;
   showDetail: (app: Application) => void;
   goToDashboard: () => void;
   goToApplications: () => void;
@@ -258,7 +259,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
   }, [applications, routeAppId, token]);
 
   useEffect(() => {
-    if (!selectedApp) {
+    if (!selectedApp || !selectedApp.id) {
       setEditForm(emptyApplicationPayload());
       setTasks([]);
       setTasksLoading(false);
@@ -336,6 +337,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
         const updated = apps.find((app) => app.id === prev.id);
         return updated ?? prev;
       });
+      setError('');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load applications';
       setError(message);
@@ -366,6 +368,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     try {
       const events = await applicationService.listStageEvents(applicationId);
       setStageEvents(events);
+      setError('');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load stage history';
       setError(message);
@@ -380,6 +383,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     try {
       const taskList = await taskService.listForApplication(applicationId);
       setTasks(taskList);
+      setError('');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load tasks';
       setError(message);
@@ -395,6 +399,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
       const events = await auditService.list(0, 25);
       setAuditEvents(events);
       setSelectedAuditEvent((prev) => prev ?? events[0] ?? null);
+      setError('');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load activity feed';
       setError(message);
@@ -410,6 +415,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     try {
       const apps = await applicationService.listStale(days);
       setStaleApplications(apps);
+      setError('');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load stale applications';
       setError(message);
@@ -600,6 +606,50 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     }
   };
 
+  const moveApplicationStage = async (appId: number, nextStage: Stage) => {
+    const current = applications.find((app) => app.id === appId);
+    if (!current) {
+      setError('Application not found.');
+      return;
+    }
+    if (current.stage === nextStage) {
+      return;
+    }
+    const allowed = STAGE_TRANSITIONS[current.stage] ?? [];
+    if (!allowed.includes(nextStage)) {
+      setError(`Cannot move from ${current.stage} to ${nextStage}.`);
+      return;
+    }
+
+    const previousApps = applications;
+    const optimisticApp = { ...current, stage: nextStage, stageChangedAt: new Date().toISOString() };
+    setTransitionBusy(true);
+    setError('');
+    setApplications((prev) => prev.map((app) => (app.id === appId ? optimisticApp : app)));
+    if (selectedApp?.id === appId) {
+      setSelectedApp(optimisticApp);
+    }
+    try {
+      const updated = await applicationService.transitionStage(appId, nextStage);
+      setApplications((prev) => prev.map((app) => (app.id === updated.id ? updated : app)));
+      if (selectedApp?.id === updated.id) {
+        setSelectedApp(updated);
+        await loadStageEvents(updated.id);
+      }
+      await loadAuditEvents();
+      await loadStaleApplications(staleDays);
+    } catch (err) {
+      setApplications(previousApps);
+      if (selectedApp?.id === appId) {
+        setSelectedApp(current);
+      }
+      const message = err instanceof Error ? err.message : 'Failed to update stage';
+      setError(message);
+    } finally {
+      setTransitionBusy(false);
+    }
+  };
+
   const toggleTaskStatus = async (task: Task, nextStatus: TaskStatus) => {
     const previous = tasks;
     const optimistic = tasks.map((item) =>
@@ -737,6 +787,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     toggleTaskStatus,
     deleteApplication,
     handleStageTransition,
+    moveApplicationStage,
     showDetail,
     goToDashboard,
     goToApplications,

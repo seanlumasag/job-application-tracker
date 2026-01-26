@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { useAppContext } from './AppLayout';
+import type { Stage } from '../types';
 
 function AppPage() {
   const {
@@ -8,7 +10,11 @@ function AppPage() {
     showDetail,
     goToApplications,
     formatRelative,
+    moveApplicationStage,
   } = useAppContext();
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+  const [dropStage, setDropStage] = useState<Stage | null>(null);
+  const safeVisibleApplications = Array.isArray(visibleApplications) ? visibleApplications : [];
 
   return (
     <section className="board-shell">
@@ -21,7 +27,7 @@ function AppPage() {
 
       <div className="board-columns">
         {boardStages.map((column) => {
-          const columnApps = visibleApplications.filter((app) => app.stage === column.stage);
+          const columnApps = safeVisibleApplications.filter((app) => app.stage === column.stage);
           return (
             <div key={column.stage} className={`board-column tone-${column.tone}`}>
               <div className="board-column-header">
@@ -33,14 +39,43 @@ function AppPage() {
                   +
                 </button>
               </div>
-              <div className="board-column-body">
+              <div
+                className={`board-column-body${dropStage === column.stage ? ' is-drop-target' : ''}`}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  if (dropStage !== column.stage) {
+                    setDropStage(column.stage);
+                  }
+                }}
+                onDragLeave={() => {
+                  if (dropStage === column.stage) {
+                    setDropStage(null);
+                  }
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  const rawId = event.dataTransfer.getData('text/plain');
+                  const appId = Number(rawId);
+                  if (!Number.isNaN(appId)) {
+                    moveApplicationStage(appId, column.stage);
+                  }
+                  setDropStage(null);
+                }}
+              >
                 {columnApps.length ? (
                   columnApps.map((app) => (
                     <button
                       key={app.id}
                       type="button"
-                      className="board-card"
+                      className={`board-card${draggingId === app.id ? ' is-dragging' : ''}`}
                       onClick={() => showDetail(app)}
+                      draggable
+                      onDragStart={(event) => {
+                        event.dataTransfer.setData('text/plain', String(app.id));
+                        event.dataTransfer.effectAllowed = 'move';
+                        setDraggingId(app.id);
+                      }}
+                      onDragEnd={() => setDraggingId(null)}
                     >
                       <div className="card-title">{app.role}</div>
                       <div className="card-sub">{app.company}</div>
