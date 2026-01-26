@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import { authService } from '../services/authService';
-import { apiClient } from '../lib/apiClient';
+import { useAuth } from '../lib/authContext';
 import './AuthPage.css';
 
 type AuthPageProps = {
@@ -29,12 +29,19 @@ const COPY = {
 };
 
 function AuthPage({ mode, onNavigate }: AuthPageProps) {
+  const { token, setToken } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   const copy = COPY[mode];
+
+  useEffect(() => {
+    if (token) {
+      onNavigate('/app');
+    }
+  }, [token, onNavigate]);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -45,8 +52,7 @@ function AuthPage({ mode, onNavigate }: AuthPageProps) {
         mode === 'signup'
           ? await authService.signup(email, password)
           : await authService.login(email, password);
-      sessionStorage.setItem('jat.token', response.token);
-      apiClient.defaults.headers.common.Authorization = `Bearer ${response.token}`;
+      setToken(response.token);
       onNavigate('/app');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Authentication failed.';

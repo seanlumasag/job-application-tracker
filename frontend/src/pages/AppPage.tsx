@@ -3,7 +3,6 @@ import { useAppContext } from './AppLayout';
 function AppPage() {
   const {
     applications,
-    summary,
     boardStages,
     visibleApplications,
     showDetail,
@@ -17,18 +16,6 @@ function AppPage() {
         <div className="summary-pill">
           <span>Total</span>
           <strong>{applications.length}</strong>
-        </div>
-        <div className="summary-pill">
-          <span>Interviews</span>
-          <strong>{summary?.stageCounts?.INTERVIEW ?? 0}</strong>
-        </div>
-        <div className="summary-pill">
-          <span>Offers</span>
-          <strong>{summary?.stageCounts?.OFFER ?? 0}</strong>
-        </div>
-        <div className="summary-pill warning">
-          <span>Overdue tasks</span>
-          <strong>{summary?.overdueTasks ?? 0}</strong>
         </div>
       </div>
 

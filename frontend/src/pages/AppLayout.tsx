@@ -7,7 +7,7 @@ import {
   memo,
   type ReactNode,
 } from 'react';
-import { apiClient } from '../lib/apiClient';
+import { useAuth } from '../lib/authContext';
 import { applicationService, type ApplicationPayload } from '../services/applicationService';
 import { authService } from '../services/authService';
 import { dashboardService } from '../services/dashboardService';
@@ -54,7 +54,7 @@ const emptyTaskPayload = (): TaskPayload => ({
   snoozeUntil: '',
 });
 
-type ViewKey = 'dashboard' | 'applications' | 'detail';
+type ViewKey = 'dashboard' | 'applications' | 'detail' | 'tasks' | 'metrics' | 'settings';
 type AuthMode = 'login' | 'signup';
 
 type AppLayoutProps = {
@@ -128,6 +128,9 @@ type AppContextValue = {
   goToDashboard: () => void;
   goToApplications: () => void;
   goToDetail: (appId: number) => void;
+  goToTasks: () => void;
+  goToMetrics: () => void;
+  goToSettings: () => void;
   formatDate: (value: string) => string;
   formatDateTime: (value: string) => string;
   formatRelative: (value: string) => string;
@@ -144,7 +147,7 @@ export const useAppContext = () => {
 };
 
 function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
-  const [token, setToken] = useState(() => sessionStorage.getItem('jat.token') ?? '');
+  const { token, setToken } = useAuth();
   const [stageFilter, setStageFilter] = useState<Stage | 'ALL'>('ALL');
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
   const [summary, setSummary] = useState<DashboardSummaryResponse | null>(null);
@@ -186,6 +189,9 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
   const view: ViewKey = useMemo(() => {
     if (routePath.startsWith('/app/applications/')) return 'detail';
     if (routePath === '/app/applications') return 'applications';
+    if (routePath === '/app/tasks') return 'tasks';
+    if (routePath === '/app/metrics') return 'metrics';
+    if (routePath === '/app/settings') return 'settings';
     return 'dashboard';
   }, [routePath]);
   const routeAppId = useMemo(() => {
@@ -196,16 +202,9 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
   const goToDashboard = () => onNavigate('/app');
   const goToApplications = () => onNavigate('/app/applications');
   const goToDetail = (appId: number) => onNavigate(`/app/applications/${appId}`);
-
-  useEffect(() => {
-    if (token) {
-      apiClient.defaults.headers.common.Authorization = `Bearer ${token}`;
-      sessionStorage.setItem('jat.token', token);
-    } else {
-      delete apiClient.defaults.headers.common.Authorization;
-      sessionStorage.removeItem('jat.token');
-    }
-  }, [token]);
+  const goToTasks = () => onNavigate('/app/tasks');
+  const goToMetrics = () => onNavigate('/app/metrics');
+  const goToSettings = () => onNavigate('/app/settings');
 
   useEffect(() => {
     if (!token) {
@@ -742,6 +741,9 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     goToDashboard,
     goToApplications,
     goToDetail,
+    goToTasks,
+    goToMetrics,
+    goToSettings,
     formatDate,
     formatDateTime,
     formatRelative,
@@ -751,13 +753,17 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     <AppContext.Provider value={contextValue}>
       <div className="app-shell app-kanban">
         <aside className="app-sidebar">
-          <div className="sidebar-brand">
+          <button
+            type="button"
+            className="sidebar-brand"
+            onClick={() => onNavigate('/')}
+            aria-label="Go to landing page"
+          >
             <div className="app-mark">JT</div>
             <div>
-              <div className="sidebar-title">eztrackr</div>
-              <div className="sidebar-sub">workspace</div>
+              <div className="sidebar-title">JobTrack</div>
             </div>
-          </div>
+          </button>
           <nav className="sidebar-nav">
             <button
               type="button"
@@ -777,39 +783,10 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
               <span className="nav-dot" />
               Applications
             </button>
-            <button type="button" className="muted" disabled>
-              <span className="nav-dot" />
-              AI Tools
-            </button>
-            <button type="button" className="muted" disabled>
-              <span className="nav-dot" />
-              Statistics
-            </button>
-            <button type="button" className="muted" disabled>
-              <span className="nav-dot" />
-              Reminders
-            </button>
-            <button type="button" className="muted" disabled>
-              <span className="nav-dot" />
-              Contacts
-            </button>
-            <button type="button" className="muted" disabled>
-              <span className="nav-dot" />
-              Documents
-            </button>
-            <button type="button" className="muted" disabled>
-              <span className="nav-dot" />
-              Import spreadsheet
-            </button>
-            <button type="button" className="muted" disabled>
-              <span className="nav-dot" />
-              Settings
-            </button>
           </nav>
           <div className="sidebar-footer">
             {token ? (
               <>
-                <span className="status-chip">Signed in</span>
                 <button type="button" className="ghost" onClick={handleLogout}>
                   Log out
                 </button>
@@ -823,30 +800,25 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
         <div className="app-body">
           <header className="board-topbar">
             <div>
-              <div className="board-title">Job Hunt 2024</div>
+              <div className="board-title">Job Hunt 2026</div>
               <div className="board-subtitle">
-                {view === 'applications' ? 'Applications' : view === 'detail' ? 'Application detail' : 'Saved jobs'}
+              {view === 'applications'
+                ? 'Applications'
+                : view === 'detail'
+                  ? 'Application detail'
+                  : view === 'tasks'
+                    ? 'Tasks'
+                    : view === 'metrics'
+                      ? 'Metrics'
+                      : view === 'settings'
+                        ? 'Settings'
+                        : 'Board'}
               </div>
             </div>
             {view === 'dashboard' && (
               <div className="board-actions">
-                <div className="board-search">
-                  <span className="search-icon">Search</span>
-                  <input
-                    value={boardQuery}
-                    onChange={(event) => setBoardQuery(event.target.value)}
-                    placeholder="Search saved jobs"
-                    aria-label="Search saved jobs"
-                  />
-                </div>
-                <button type="button" className="ghost">
-                  Filter
-                </button>
                 <button type="button" className="filled" onClick={goToApplications}>
                   + Add Job
-                </button>
-                <button type="button" className="outlined" disabled>
-                  + Add Column
                 </button>
               </div>
             )}
@@ -1004,8 +976,7 @@ export const ApplicationRow = memo(function ApplicationRow({
         <p>{app.role}</p>
       </div>
       <div className="application-meta">
-        <span>{app.stage}</span>
-        <span>Last touch {formatRelative(app.lastTouchAt)}</span>
+        <span className={`stage-pill stage-${app.stage.toLowerCase()}`}>{app.stage}</span>
       </div>
     </button>
   );

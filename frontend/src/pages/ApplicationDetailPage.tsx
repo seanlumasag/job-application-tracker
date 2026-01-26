@@ -113,10 +113,6 @@ function ApplicationDetailPage() {
               ))
             )}
           </div>
-          <div className="last-touch">
-            <span className="muted">Last touch</span>
-            <strong>{formatDateTime(selectedApp.lastTouchAt)}</strong>
-          </div>
         </div>
         <div className="detail-card tasks-card">
           <div className="panel-header">

@@ -1,8 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
+import { AuthProvider } from '../lib/authContext';
 import AppLayout from '../pages/AppLayout';
 import AppPage from '../pages/AppPage';
 import ApplicationsPage from '../pages/ApplicationsPage';
 import ApplicationDetailPage from '../pages/ApplicationDetailPage';
+import TasksPage from '../pages/TasksPage';
+import MetricsPage from '../pages/MetricsPage';
+import SettingsPage from '../pages/SettingsPage';
 import LandingPage from '../pages/LandingPage';
 import AuthPage from '../pages/AuthPage';
 
@@ -36,29 +40,34 @@ function Router() {
   const isSignIn = path === '/signin';
   const isSignUp = path === '/signup';
 
-  if (isAppRoute) {
-    const appChild =
-      path === '/app'
-        ? <AppPage />
-        : path === '/app/applications'
-          ? <ApplicationsPage />
-          : <ApplicationDetailPage />;
-    return (
-      <AppLayout routePath={path} onNavigate={navigate}>
-        {appChild}
-      </AppLayout>
-    );
-  }
+  const appChild =
+    path === '/app'
+      ? <AppPage />
+      : path === '/app/applications'
+        ? <ApplicationsPage />
+        : path === '/app/tasks'
+          ? <TasksPage />
+          : path === '/app/metrics'
+            ? <MetricsPage />
+            : path === '/app/settings'
+              ? <SettingsPage />
+              : <ApplicationDetailPage />;
 
-  if (isSignIn) {
-    return <AuthPage mode="signin" onNavigate={navigate} />;
-  }
-
-  if (isSignUp) {
-    return <AuthPage mode="signup" onNavigate={navigate} />;
-  }
-
-  return <LandingPage onNavigate={navigate} />;
+  return (
+    <AuthProvider>
+      {isAppRoute ? (
+        <AppLayout routePath={path} onNavigate={navigate}>
+          {appChild}
+        </AppLayout>
+      ) : isSignIn ? (
+        <AuthPage mode="signin" onNavigate={navigate} />
+      ) : isSignUp ? (
+        <AuthPage mode="signup" onNavigate={navigate} />
+      ) : (
+        <LandingPage onNavigate={navigate} />
+      )}
+    </AuthProvider>
+  );
 }
 
 export default Router;

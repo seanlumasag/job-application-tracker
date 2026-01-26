@@ -50,6 +50,15 @@ export interface DashboardActivityResponse {
   items: DashboardActivityPoint[];
 }
 
+export interface MetricsResponse {
+  timestamp: string;
+  users: number;
+  applications: number;
+  tasks: number;
+  stageEvents: number;
+  auditEvents: number;
+}
+
 export interface StageEvent {
   id: number;
   applicationId: number;

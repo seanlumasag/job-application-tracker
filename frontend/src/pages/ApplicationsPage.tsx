@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ApplicationRow, SkeletonStack, STAGES, useAppContext } from './AppLayout';
 
 function ApplicationsPage() {
@@ -14,6 +15,7 @@ function ApplicationsPage() {
     handleCreateChange,
     showDetail,
   } = useAppContext();
+  const [showForm, setShowForm] = useState(false);
 
   return (
     <section className="panel">
@@ -25,72 +27,81 @@ function ApplicationsPage() {
         <div className="header-actions">
           <button
             type="button"
-            className="ghost"
+            className="text-button"
             onClick={() => refreshApplications()}
             disabled={loading}
           >
             Refresh
           </button>
-        </div>
-      </div>
-      <form className="app-form" onSubmit={submitCreate}>
-        <div className="form-grid two-col">
-          <label className="field">
-            <span>Company</span>
-            <input
-              type="text"
-              value={createForm.company}
-              onChange={(event) => handleCreateChange('company', event.target.value)}
-              placeholder="Acme Corp"
-              required
-            />
-          </label>
-          <label className="field">
-            <span>Role</span>
-            <input
-              type="text"
-              value={createForm.role}
-              onChange={(event) => handleCreateChange('role', event.target.value)}
-              placeholder="Product Operations Lead"
-              required
-            />
-          </label>
-          <label className="field">
-            <span>Location</span>
-            <input
-              type="text"
-              value={createForm.location ?? ''}
-              onChange={(event) => handleCreateChange('location', event.target.value)}
-              placeholder="Remote / NYC"
-            />
-          </label>
-          <label className="field">
-            <span>Job URL</span>
-            <input
-              type="url"
-              value={createForm.jobUrl ?? ''}
-              onChange={(event) => handleCreateChange('jobUrl', event.target.value)}
-              placeholder="https://company.com/job"
-            />
-          </label>
-          <label className="field full">
-            <span>Notes</span>
-            <textarea
-              rows={3}
-              value={createForm.notes ?? ''}
-              onChange={(event) => handleCreateChange('notes', event.target.value)}
-              placeholder="Relevant context, recruiter, referral details, etc."
-            />
-          </label>
-        </div>
-        <div className="form-actions">
-          <p className="muted">Creates in stage SAVED and stamps last touch now.</p>
-          {createFormError && <p className="form-error">{createFormError}</p>}
-          <button type="submit" className="primary" disabled={createBusy}>
-            {createBusy ? 'Adding…' : 'Add application'}
+          <button
+            type="button"
+            className="primary"
+            onClick={() => setShowForm((prev) => !prev)}
+          >
+            {showForm ? 'Close' : 'New application'}
           </button>
         </div>
-      </form>
+      </div>
+      {showForm && (
+        <form className="app-form" onSubmit={submitCreate}>
+          <div className="form-grid two-col">
+            <label className="field">
+              <span>Company</span>
+              <input
+                type="text"
+                value={createForm.company}
+                onChange={(event) => handleCreateChange('company', event.target.value)}
+                placeholder="Acme Corp"
+                required
+              />
+            </label>
+            <label className="field">
+              <span>Role</span>
+              <input
+                type="text"
+                value={createForm.role}
+                onChange={(event) => handleCreateChange('role', event.target.value)}
+                placeholder="Product Operations Lead"
+                required
+              />
+            </label>
+            <label className="field">
+              <span>Location</span>
+              <input
+                type="text"
+                value={createForm.location ?? ''}
+                onChange={(event) => handleCreateChange('location', event.target.value)}
+                placeholder="Remote / NYC"
+              />
+            </label>
+            <label className="field">
+              <span>Job URL</span>
+              <input
+                type="url"
+                value={createForm.jobUrl ?? ''}
+                onChange={(event) => handleCreateChange('jobUrl', event.target.value)}
+                placeholder="https://company.com/job"
+              />
+            </label>
+            <label className="field full">
+              <span>Notes</span>
+              <textarea
+                rows={3}
+                value={createForm.notes ?? ''}
+                onChange={(event) => handleCreateChange('notes', event.target.value)}
+                placeholder="Relevant context, recruiter, referral details, etc."
+              />
+            </label>
+          </div>
+          <div className="form-actions">
+            <p className="muted">Creates in stage SAVED and stamps last touch now.</p>
+            {createFormError && <p className="form-error">{createFormError}</p>}
+            <button type="submit" className="primary" disabled={createBusy}>
+              {createBusy ? 'Adding…' : 'Add application'}
+            </button>
+          </div>
+        </form>
+      )}
       <div className="filter-row">
         <button
           type="button"

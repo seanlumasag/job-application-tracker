@@ -28,4 +28,19 @@ export const taskService = {
     const response = await apiClient.patch<Task>(`/tasks/${id}/status`, { status });
     return response.data;
   },
+
+  async listDueToday(): Promise<Task[]> {
+    const response = await apiClient.get<Task[]>('/tasks/due/today');
+    return response.data;
+  },
+
+  async listDueWeek(): Promise<Task[]> {
+    const response = await apiClient.get<Task[]>('/tasks/due/week');
+    return response.data;
+  },
+
+  async listOverdue(): Promise<Task[]> {
+    const response = await apiClient.get<Task[]>('/tasks/overdue');
+    return response.data;
+  },
 };

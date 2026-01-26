@@ -5,6 +5,8 @@ type LandingPageProps = {
   onNavigate: (path: string) => void;
 };
 
+const NAV_OFFSET = 84;
+
 const linkTargets: Record<string, string> = {
   Features: '#features',
   Solutions: '#solutions',
@@ -154,7 +156,8 @@ function LandingPage({ onNavigate }: LandingPageProps) {
       const sectionId = target.slice(1);
       const section = document.getElementById(sectionId);
       if (section) {
-        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const top = section.getBoundingClientRect().top + window.scrollY - NAV_OFFSET;
+        window.scrollTo({ top: Math.max(top, 0), behavior: 'smooth' });
         window.history.replaceState(null, '', `#${sectionId}`);
       }
       return;

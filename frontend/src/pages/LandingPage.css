@@ -1,13 +1,18 @@
 .landing {
   position: relative;
   min-height: 100vh;
-  padding: 24px 24px 0;
+  padding: 96px 24px 0;
   overflow: hidden;
   background: radial-gradient(circle at 20% 20%, rgba(131, 90, 255, 0.12), transparent 36%),
     radial-gradient(circle at 80% 40%, rgba(138, 223, 188, 0.16), transparent 40%),
     radial-gradient(circle at 50% 60%, rgba(250, 210, 255, 0.12), transparent 36%),
     linear-gradient(180deg, #f9f6ff 0%, #f2f7ff 100%);
   color: #1d0f3a;
+}
+
+html,
+body {
+  scroll-padding-top: 84px;
 }
 
 .landing-bg {
@@ -35,20 +40,23 @@
 }
 
 .landing-nav {
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 12px 18px;
-  background: #ffffffb8;
+  width: 100%;
+  margin: 0;
+  padding: 12px 6vw;
+  background: #ffffff;
   border: 1px solid #efe9ff;
-  border-radius: 14px;
-  backdrop-filter: blur(10px);
+  border-radius: 0;
+  backdrop-filter: none;
   display: flex;
   align-items: center;
   gap: 18px;
-  position: sticky;
-  top: 12px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 2;
-  box-shadow: 0 12px 50px rgba(69, 35, 104, 0.08);
+  box-shadow: none;
+  box-sizing: border-box;
 }
 
 .brand {
@@ -1360,7 +1368,6 @@
 
 @media (max-width: 1100px) {
   .landing-nav {
-    position: static;
     flex-wrap: wrap;
   }
 
@@ -1371,7 +1378,7 @@
 
 @media (max-width: 720px) {
   .landing {
-    padding: 18px 14px 0;
+    padding: 128px 14px 0;
   }
 
   .hero-copy h1 {
