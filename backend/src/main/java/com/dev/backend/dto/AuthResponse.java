@@ -9,4 +9,7 @@ public class AuthResponse {
     private Long userId;
     private String email;
     private String token;
+    private String refreshToken;
+    private boolean emailVerified;
+    private boolean mfaEnabled;
 }

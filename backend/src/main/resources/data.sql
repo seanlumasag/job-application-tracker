@@ -1,6 +1,6 @@
-INSERT INTO users (id, email, password_hash, created_at, updated_at)
+INSERT INTO users (id, email, password_hash, email_verified, email_verified_at, mfa_enabled, mfa_secret, created_at, updated_at)
 VALUES
-    (1, 'demo@example.com', '$2a$10$7EqJtq98hPqEX7fNZaFWoO5T0C5Ul9kY01/1i/8uRIXV4Yg8Zb9oS', now(), now())
+    (1, 'demo@example.com', '$2a$10$7EqJtq98hPqEX7fNZaFWoO5T0C5Ul9kY01/1i/8uRIXV4Yg8Zb9oS', true, now(), false, null, now(), now())
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO applications (id, company, role, job_url, location, notes, stage, last_touch_at, stage_changed_at, user_id, created_at, updated_at)

@@ -35,9 +35,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
             return true;
         }
-        return path.startsWith("/api/auth/")
-                || "/api/health".equals(path)
-                || "/api/metrics".equals(path);
+        if (path.startsWith("/api/auth/")) {
+            return path.equals("/api/auth/signup")
+                    || path.equals("/api/auth/login")
+                    || path.equals("/api/auth/refresh")
+                    || path.equals("/api/auth/logout")
+                    || path.equals("/api/auth/verify-email")
+                    || path.equals("/api/auth/verify-email/resend")
+                    || path.equals("/api/auth/password/forgot")
+                    || path.equals("/api/auth/password/reset");
+        }
+        return "/api/health".equals(path) || "/api/metrics".equals(path);
     }
 
     @Override

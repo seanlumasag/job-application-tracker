@@ -188,6 +188,15 @@ For a guided walkthrough, see [QUICKSTART.md](./QUICKSTART.md).
 - `GET /api/metrics`
 - `POST /api/auth/signup`
 - `POST /api/auth/login`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+- `POST /api/auth/verify-email`
+- `POST /api/auth/verify-email/resend`
+- `POST /api/auth/password/forgot`
+- `POST /api/auth/password/reset`
+- `POST /api/auth/mfa/setup`
+- `POST /api/auth/mfa/enable`
+- `POST /api/auth/mfa/disable`
 - `GET /api/me`
 - `GET /api/applications`
 - `POST /api/applications`

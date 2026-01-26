@@ -73,6 +73,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- TOTP base32 support -->
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.16.0</version>
+        </dependency>
+
         <!-- Load .env files into Spring Environment -->
         <dependency>
             <groupId>me.paulschwarz</groupId>

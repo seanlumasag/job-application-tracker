@@ -20,11 +20,14 @@ public class JwtService {
 
     private final Key signingKey;
     private final long expirationSeconds;
+    private final boolean allowDevSecrets;
 
     public JwtService(
             @Value("${jwt.secret:dev-secret-change-me-please-change-32chars}") String secret,
-            @Value("${jwt.expiration-seconds:86400}") long expirationSeconds
+            @Value("${jwt.expiration-seconds:86400}") long expirationSeconds,
+            @Value("${app.security.allow-dev-secrets:true}") boolean allowDevSecrets
     ) {
+        this.allowDevSecrets = allowDevSecrets;
         this.signingKey = Keys.hmacShaKeyFor(normalizeSecret(secret));
         this.expirationSeconds = expirationSeconds;
     }
@@ -63,11 +66,17 @@ public class JwtService {
     private byte[] normalizeSecret(String secret) {
         String trimmed = secret == null ? "" : secret.trim();
         if (trimmed.isEmpty()) {
+            if (!allowDevSecrets) {
+                throw new IllegalStateException("JWT secret is required");
+            }
             trimmed = "dev-secret-change-me-please-change-32chars";
         }
         byte[] bytes = trimmed.getBytes(StandardCharsets.UTF_8);
         if (bytes.length >= 32) {
             return bytes;
+        }
+        if (!allowDevSecrets) {
+            throw new IllegalStateException("JWT secret must be at least 32 bytes");
         }
         String padded = trimmed + "00000000000000000000000000000000";
         return padded.getBytes(StandardCharsets.UTF_8);
