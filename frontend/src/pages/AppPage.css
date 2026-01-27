@@ -1266,7 +1266,7 @@
 
 .form-card {
   border: 1px dashed var(--surface-strong);
-  background: #fffdf8;
+  background: #efe9ff
 }
 
 .chip-group {
@@ -1302,20 +1302,16 @@
 }
 
 .stage-button {
-  border-color: transparent;
-  background: #f4f0ff;
+  border: 1px solid #dfe3f0;
+  background: #fafbff;
   color: #3b2564;
   font-weight: 600;
   justify-content: center;
   width: 100%;
 }
 
-.stage-button.danger {
-  background: #ffe7e6;
-  color: #7a2f25;
-}
-
 .stage-button.is-current {
+  border-color: transparent;
   background: #e2dbff;
   color: #2b1c4e;
   cursor: default;

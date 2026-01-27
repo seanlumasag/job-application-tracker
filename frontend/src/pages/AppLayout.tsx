@@ -3,6 +3,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   memo,
   type ReactNode,
@@ -170,6 +171,12 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
   const [transitionBusy, setTransitionBusy] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [tasksLoading, setTasksLoading] = useState(false);
+  const [showLoadingNotice, setShowLoadingNotice] = useState(false);
+  const [displayError, setDisplayError] = useState('');
+  const loadingNoticeTimer = useRef<number | null>(null);
+  const loadingNoticeShownAt = useRef<number | null>(null);
+  const errorNoticeTimer = useRef<number | null>(null);
+  const errorNoticeShownAt = useRef<number | null>(null);
   const [taskFilter, setTaskFilter] = useState<TaskFilter>('ALL');
   const [taskForm, setTaskForm] = useState<TaskPayload>(() => emptyTaskPayload());
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
@@ -221,6 +228,8 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
       setAuditLoading(false);
       setError('');
       setProfileEmail('');
+      setShowLoadingNotice(false);
+      setDisplayError('');
       return;
     }
     refreshDashboard();
@@ -235,6 +244,76 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
       }
     })();
   }, [token]);
+
+  useEffect(() => {
+    const delayMs = 800;
+    const minVisibleMs = 600;
+    if (loadingNoticeTimer.current) {
+      window.clearTimeout(loadingNoticeTimer.current);
+      loadingNoticeTimer.current = null;
+    }
+    if (!token || !loading) {
+      if (showLoadingNotice && loadingNoticeShownAt.current) {
+        const elapsed = Date.now() - loadingNoticeShownAt.current;
+        const remaining = Math.max(minVisibleMs - elapsed, 0);
+        loadingNoticeTimer.current = window.setTimeout(() => {
+          setShowLoadingNotice(false);
+          loadingNoticeShownAt.current = null;
+          loadingNoticeTimer.current = null;
+        }, remaining);
+        return;
+      }
+      setShowLoadingNotice(false);
+      loadingNoticeShownAt.current = null;
+      return;
+    }
+    loadingNoticeTimer.current = window.setTimeout(() => {
+      setShowLoadingNotice(true);
+      loadingNoticeShownAt.current = Date.now();
+      loadingNoticeTimer.current = null;
+    }, delayMs);
+    return () => {
+      if (loadingNoticeTimer.current) {
+        window.clearTimeout(loadingNoticeTimer.current);
+        loadingNoticeTimer.current = null;
+      }
+    };
+  }, [loading, token, showLoadingNotice]);
+
+  useEffect(() => {
+    const delayMs = 500;
+    const minVisibleMs = 800;
+    if (errorNoticeTimer.current) {
+      window.clearTimeout(errorNoticeTimer.current);
+      errorNoticeTimer.current = null;
+    }
+    if (!error) {
+      if (displayError && errorNoticeShownAt.current) {
+        const elapsed = Date.now() - errorNoticeShownAt.current;
+        const remaining = Math.max(minVisibleMs - elapsed, 0);
+        errorNoticeTimer.current = window.setTimeout(() => {
+          setDisplayError('');
+          errorNoticeShownAt.current = null;
+          errorNoticeTimer.current = null;
+        }, remaining);
+        return;
+      }
+      setDisplayError('');
+      errorNoticeShownAt.current = null;
+      return;
+    }
+    errorNoticeTimer.current = window.setTimeout(() => {
+      setDisplayError(error);
+      errorNoticeShownAt.current = Date.now();
+      errorNoticeTimer.current = null;
+    }, delayMs);
+    return () => {
+      if (errorNoticeTimer.current) {
+        window.clearTimeout(errorNoticeTimer.current);
+        errorNoticeTimer.current = null;
+      }
+    };
+  }, [error, displayError]);
 
   useEffect(() => {
     if (!token) return;
@@ -629,8 +708,10 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
       if (!isNetworkError) {
         setSelectedApp(previousApp);
         setApplications(previousApps);
+        setError(message);
+      } else {
+        setError('');
       }
-      setError(message);
       setTransitionBusy(false);
       void refreshApplications(stageFilter, true);
       return;
@@ -921,8 +1002,8 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
             )}
           </header>
 
-          {error && <div className="app-alert error">{error}</div>}
-          {loading && token && <div className="app-alert">Syncing latest data…</div>}
+          {displayError && <div className="app-alert error">{displayError}</div>}
+          {showLoadingNotice && <div className="app-alert">Syncing latest data…</div>}
 
           <main className="app-main">
             {!token && (

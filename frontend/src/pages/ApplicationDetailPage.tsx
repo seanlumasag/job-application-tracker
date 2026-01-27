@@ -100,9 +100,7 @@ function ApplicationDetailPage() {
                 <button
                   key={stage}
                   type="button"
-                  className={`ghost stage-button${isCurrent ? ' is-current' : ''}${
-                    stage === 'REJECTED' || stage === 'WITHDRAWN' ? ' danger' : ''
-                  }`}
+                  className={`ghost stage-button${isCurrent ? ' is-current' : ''}`}
                   disabled={transitionBusy || isCurrent}
                   onClick={() => handleStageTransition(stage)}
                 >
@@ -168,9 +166,6 @@ function ApplicationDetailPage() {
               </label>
             </div>
             <div className="form-actions">
-              <div className="muted">
-                {editingTaskId ? 'Editing existing task' : 'Creates an OPEN task'}
-              </div>
               {taskFormError && <p className="form-error">{taskFormError}</p>}
               <div className="task-form-actions">
                 {editingTaskId && (
