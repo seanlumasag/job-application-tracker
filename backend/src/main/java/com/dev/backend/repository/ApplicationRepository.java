@@ -27,6 +27,8 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     @Query("select a.stage as stage, count(a) as total from Application a where a.userId = :userId group by a.stage")
     List<StageCount> countByStage(@Param("userId") UUID userId);
 
+    void deleteAllByUserId(UUID userId);
+
     interface StageCount {
         Stage getStage();
         long getTotal();

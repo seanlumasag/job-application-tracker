@@ -11,6 +11,10 @@ import com.dev.backend.repository.EmailVerificationTokenRepository;
 import com.dev.backend.repository.PasswordResetTokenRepository;
 import com.dev.backend.repository.RefreshTokenRepository;
 import com.dev.backend.repository.UserRepository;
+import com.dev.backend.repository.ApplicationRepository;
+import com.dev.backend.repository.TaskRepository;
+import com.dev.backend.repository.StageEventRepository;
+import com.dev.backend.repository.AuditEventRepository;
 import com.dev.backend.security.TotpService;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
@@ -22,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 @Service
@@ -33,6 +38,10 @@ public class AuthService {
     private final EmailVerificationTokenRepository emailVerificationTokenRepository;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final ApplicationRepository applicationRepository;
+    private final TaskRepository taskRepository;
+    private final StageEventRepository stageEventRepository;
+    private final AuditEventRepository auditEventRepository;
     private final TotpService totpService;
     private final boolean requireEmailVerified;
     private final boolean returnTokens;
@@ -48,6 +57,10 @@ public class AuthService {
             EmailVerificationTokenRepository emailVerificationTokenRepository,
             PasswordResetTokenRepository passwordResetTokenRepository,
             RefreshTokenRepository refreshTokenRepository,
+            ApplicationRepository applicationRepository,
+            TaskRepository taskRepository,
+            StageEventRepository stageEventRepository,
+            AuditEventRepository auditEventRepository,
             TotpService totpService,
             @Value("${app.auth.require-email-verified:false}") boolean requireEmailVerified,
             @Value("${app.auth.return-tokens:true}") boolean returnTokens,
@@ -61,6 +74,10 @@ public class AuthService {
         this.emailVerificationTokenRepository = emailVerificationTokenRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.refreshTokenRepository = refreshTokenRepository;
+        this.applicationRepository = applicationRepository;
+        this.taskRepository = taskRepository;
+        this.stageEventRepository = stageEventRepository;
+        this.auditEventRepository = auditEventRepository;
         this.totpService = totpService;
         this.requireEmailVerified = requireEmailVerified;
         this.returnTokens = returnTokens;
@@ -225,6 +242,23 @@ public class AuthService {
         user.setMfaEnabled(false);
         user.setMfaSecret(null);
         userRepository.save(user);
+    }
+
+    @Transactional
+    public void deleteAccount(UUID userId, String password) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
+        }
+        refreshTokenRepository.deleteAllByUserId(userId);
+        emailVerificationTokenRepository.deleteAllByUserId(userId);
+        passwordResetTokenRepository.deleteAllByUserId(userId);
+        taskRepository.deleteAllByApplicationUserId(userId);
+        stageEventRepository.deleteAllByApplicationUserId(userId);
+        applicationRepository.deleteAllByUserId(userId);
+        auditEventRepository.deleteAllByUserId(userId);
+        userRepository.deleteById(userId);
     }
     
 

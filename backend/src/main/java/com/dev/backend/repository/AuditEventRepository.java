@@ -8,4 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AuditEventRepository extends JpaRepository<AuditEvent, Long> {
     Page<AuditEvent> findAllByUserId(UUID userId, Pageable pageable);
+
+    void deleteAllByUserId(UUID userId);
 }

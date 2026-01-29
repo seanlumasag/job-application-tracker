@@ -63,4 +63,6 @@ public interface TaskRepository extends JpaRepository<Task, Long> {
     );
 
     void deleteAllByApplicationIdAndApplicationUserId(Long applicationId, UUID userId);
+
+    void deleteAllByApplicationUserId(UUID userId);
 }
