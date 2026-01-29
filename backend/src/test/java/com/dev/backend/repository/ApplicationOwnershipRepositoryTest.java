@@ -2,6 +2,7 @@ package com.dev.backend.repository;
 
 import com.dev.backend.model.Application;
 import com.dev.backend.model.Stage;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -22,36 +23,42 @@ class ApplicationOwnershipRepositoryTest {
 
     @Test
     void findByIdAndUserIdBlocksOtherUsers() {
+        UUID ownerId = UUID.randomUUID();
+        UUID otherId = UUID.randomUUID();
+
         Application ownerApp = new Application();
         ownerApp.setCompany("Acme");
         ownerApp.setRole("Engineer");
         ownerApp.setStage(Stage.SAVED);
-        ownerApp.setUserId(100L);
+        ownerApp.setUserId(ownerId);
         entityManager.persist(ownerApp);
 
         entityManager.flush();
 
-        assertThat(applicationRepository.findByIdAndUserId(ownerApp.getId(), 200L)).isEmpty();
-        assertThat(applicationRepository.findByIdAndUserId(ownerApp.getId(), 100L)).isPresent();
+        assertThat(applicationRepository.findByIdAndUserId(ownerApp.getId(), otherId)).isEmpty();
+        assertThat(applicationRepository.findByIdAndUserId(ownerApp.getId(), ownerId)).isPresent();
     }
 
     @Test
     void findAllByUserIdReturnsOnlyOwnedRows() {
+        UUID ownerId = UUID.randomUUID();
+        UUID otherId = UUID.randomUUID();
+
         Application ownerApp = new Application();
         ownerApp.setCompany("OwnerCo");
         ownerApp.setRole("Engineer");
-        ownerApp.setUserId(101L);
+        ownerApp.setUserId(ownerId);
         entityManager.persist(ownerApp);
 
         Application otherApp = new Application();
         otherApp.setCompany("OtherCo");
         otherApp.setRole("Analyst");
-        otherApp.setUserId(202L);
+        otherApp.setUserId(otherId);
         entityManager.persist(otherApp);
 
         entityManager.flush();
 
-        assertThat(applicationRepository.findAllByUserId(101L))
+        assertThat(applicationRepository.findAllByUserId(ownerId))
                 .extracting(Application::getId)
                 .containsExactly(ownerApp.getId());
     }

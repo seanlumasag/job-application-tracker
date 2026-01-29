@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +32,7 @@ public class DashboardController {
 
     @GetMapping("/summary")
     public DashboardSummaryResponse summary(HttpServletRequest servletRequest) {
-        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        UUID userId = (UUID) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -43,7 +44,7 @@ public class DashboardController {
             @RequestParam(name = "days", defaultValue = "30") @Min(1) @Max(365) int days,
             HttpServletRequest servletRequest
     ) {
-        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        UUID userId = (UUID) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -55,7 +56,7 @@ public class DashboardController {
             @RequestParam(name = "days", defaultValue = "7") @Min(1) @Max(90) int days,
             HttpServletRequest servletRequest
     ) {
-        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        UUID userId = (UUID) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -67,7 +68,7 @@ public class DashboardController {
             @RequestParam(name = "days", defaultValue = "7") @Min(1) @Max(90) int days,
             HttpServletRequest servletRequest
     ) {
-        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        UUID userId = (UUID) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }

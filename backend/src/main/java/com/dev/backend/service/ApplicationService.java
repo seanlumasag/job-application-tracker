@@ -10,6 +10,7 @@ import com.dev.backend.repository.StageEventRepository;
 import com.dev.backend.repository.TaskRepository;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -36,7 +37,7 @@ public class ApplicationService {
         this.auditService = auditService;
     }
 
-    public Application create(Long userId, ApplicationCreateRequest request) {
+    public Application create(UUID userId, ApplicationCreateRequest request) {
         Application application = new Application();
         application.setCompany(request.getCompany());
         application.setRole(request.getRole());
@@ -49,7 +50,7 @@ public class ApplicationService {
         return applicationRepository.save(application);
     }
 
-    public List<Application> list(Long userId, Stage stage) {
+    public List<Application> list(UUID userId, Stage stage) {
         Sort sort = Sort.by(Sort.Direction.DESC, "lastTouchAt");
         if (stage == null) {
             return applicationRepository.findAllByUserId(userId, sort);
@@ -57,13 +58,13 @@ public class ApplicationService {
         return applicationRepository.findAllByUserIdAndStage(userId, stage, sort);
     }
 
-    public List<Application> listStale(Long userId, int days) {
+    public List<Application> listStale(UUID userId, int days) {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(days);
         Sort sort = Sort.by(Sort.Direction.ASC, "lastTouchAt");
         return applicationRepository.findAllByUserIdAndLastTouchAtBefore(userId, cutoff, sort);
     }
 
-    public Application update(Long userId, Long applicationId, ApplicationUpdateRequest request) {
+    public Application update(UUID userId, Long applicationId, ApplicationUpdateRequest request) {
         Application application = applicationRepository.findByIdAndUserId(applicationId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
         application.setCompany(request.getCompany());
@@ -76,7 +77,7 @@ public class ApplicationService {
     }
 
     @Transactional
-    public void delete(Long userId, Long applicationId) {
+    public void delete(UUID userId, Long applicationId) {
         Application application = applicationRepository.findByIdAndUserId(applicationId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
         taskRepository.deleteAllByApplicationIdAndApplicationUserId(applicationId, userId);
@@ -84,14 +85,14 @@ public class ApplicationService {
         applicationRepository.delete(application);
     }
 
-    public List<StageEvent> listStageEvents(Long userId, Long applicationId) {
+    public List<StageEvent> listStageEvents(UUID userId, Long applicationId) {
         applicationRepository.findByIdAndUserId(applicationId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
         return stageEventRepository.findAllByApplicationIdAndApplicationUserIdOrderByCreatedAtDesc(applicationId, userId);
     }
 
     @Transactional
-    public Application transitionStage(Long userId, Long applicationId, Stage nextStage) {
+    public Application transitionStage(UUID userId, Long applicationId, Stage nextStage) {
         Application application = applicationRepository.findByIdAndUserId(applicationId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
         Stage currentStage = application.getStage();

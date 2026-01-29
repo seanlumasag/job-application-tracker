@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.time.Instant;
 import java.util.Date;
+import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +38,7 @@ public class JwtService {
         Instant expiresAt = now.plusSeconds(expirationSeconds);
 
         return Jwts.builder()
-                .setSubject(String.valueOf(user.getId()))
+                .setSubject(user.getId().toString())
                 .claim("email", user.getEmail())
                 .setIssuedAt(Date.from(now))
                 .setExpiration(Date.from(expiresAt))
@@ -55,7 +56,7 @@ public class JwtService {
             if (subject == null || subject.isBlank()) {
                 throw new JwtException("Missing subject");
             }
-            Long userId = Long.valueOf(subject);
+            UUID userId = UUID.fromString(subject);
             String email = claims.getBody().get("email", String.class);
             return new AuthenticatedUser(userId, email);
         } catch (JwtException | IllegalArgumentException ex) {

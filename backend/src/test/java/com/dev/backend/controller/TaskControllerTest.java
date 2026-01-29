@@ -268,7 +268,7 @@ class TaskControllerTest {
         return userRepository.save(user);
     }
 
-    private Application createApplication(Long userId, String company, String role) {
+    private Application createApplication(java.util.UUID userId, String company, String role) {
         Application application = new Application();
         application.setCompany(company);
         application.setRole(role);

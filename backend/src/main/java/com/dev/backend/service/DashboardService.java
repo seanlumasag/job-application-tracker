@@ -17,6 +17,7 @@ import java.time.LocalDateTime;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -38,7 +39,7 @@ public class DashboardService {
         this.stageEventRepository = stageEventRepository;
     }
 
-    public DashboardSummaryResponse summary(Long userId) {
+    public DashboardSummaryResponse summary(UUID userId) {
         Map<Stage, Long> stageCounts = new EnumMap<>(Stage.class);
         applicationRepository.countByStage(userId).forEach(count -> stageCounts.put(count.getStage(), count.getTotal()));
         for (Stage stage : Stage.values()) {
@@ -49,7 +50,7 @@ public class DashboardService {
         return new DashboardSummaryResponse(stageCounts, overdueTasks);
     }
 
-    public List<ApplicationResponse> staleApplications(Long userId, int days) {
+    public List<ApplicationResponse> staleApplications(UUID userId, int days) {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(days);
         Sort sort = Sort.by(Sort.Direction.ASC, "lastTouchAt");
         return applicationRepository.findAllByUserIdAndLastTouchAtBefore(userId, cutoff, sort).stream()
@@ -57,7 +58,7 @@ public class DashboardService {
                 .collect(Collectors.toList());
     }
 
-    public DashboardNextActionsResponse nextActions(Long userId, int days) {
+    public DashboardNextActionsResponse nextActions(UUID userId, int days) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime end = now.plusDays(days);
         List<TaskResponse> dueSoonTasks = taskRepository.findDueSoon(userId, now, end, now).stream()
@@ -75,7 +76,7 @@ public class DashboardService {
         return new DashboardNextActionsResponse(dueSoonTasks, staleApplications);
     }
 
-    public DashboardActivityResponse activity(Long userId, int days) {
+    public DashboardActivityResponse activity(UUID userId, int days) {
         LocalDate today = LocalDate.now();
         LocalDate startDate = today.minusDays(days - 1L);
         LocalDateTime start = startDate.atStartOfDay();

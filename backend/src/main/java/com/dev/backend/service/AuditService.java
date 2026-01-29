@@ -5,6 +5,7 @@ import com.dev.backend.repository.AuditEventRepository;
 import com.dev.backend.web.RequestCorrelation;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.UUID;
 import org.slf4j.MDC;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -22,7 +23,7 @@ public class AuditService {
         this.objectMapper = objectMapper;
     }
 
-    public void record(Long userId, String type, String entityType, Long entityId, Object payload) {
+    public void record(UUID userId, String type, String entityType, Long entityId, Object payload) {
         AuditEvent event = new AuditEvent();
         event.setUserId(userId);
         event.setEventType(type);
@@ -33,7 +34,7 @@ public class AuditService {
         auditEventRepository.save(event);
     }
 
-    public Page<AuditEvent> listForUser(Long userId, int page, int size) {
+    public Page<AuditEvent> listForUser(UUID userId, int page, int size) {
         PageRequest pageRequest = PageRequest.of(
                 page,
                 size,

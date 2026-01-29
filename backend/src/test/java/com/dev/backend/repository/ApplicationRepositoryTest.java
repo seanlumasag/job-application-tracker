@@ -4,6 +4,7 @@ import com.dev.backend.model.Application;
 import com.dev.backend.model.Stage;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -55,11 +56,12 @@ class ApplicationRepositoryTest {
 
     @Test
     void findAllByUserIdAndStageRespectsSort() {
+        UUID userId = UUID.randomUUID();
         Application oldSaved = new Application();
         oldSaved.setCompany("Old");
         oldSaved.setRole("Dev");
         oldSaved.setStage(Stage.SAVED);
-        oldSaved.setUserId(10L);
+        oldSaved.setUserId(userId);
         oldSaved.setLastTouchAt(LocalDateTime.now().minusDays(10));
         entityManager.persist(oldSaved);
 
@@ -67,7 +69,7 @@ class ApplicationRepositoryTest {
         newSaved.setCompany("New");
         newSaved.setRole("Dev");
         newSaved.setStage(Stage.SAVED);
-        newSaved.setUserId(10L);
+        newSaved.setUserId(userId);
         newSaved.setLastTouchAt(LocalDateTime.now().minusDays(2));
         entityManager.persist(newSaved);
 
@@ -75,13 +77,13 @@ class ApplicationRepositoryTest {
         otherStage.setCompany("Applied");
         otherStage.setRole("Dev");
         otherStage.setStage(Stage.APPLIED);
-        otherStage.setUserId(10L);
+        otherStage.setUserId(userId);
         entityManager.persist(otherStage);
 
         entityManager.flush();
 
         List<Application> results = applicationRepository.findAllByUserIdAndStage(
-                10L,
+                userId,
                 Stage.SAVED,
                 Sort.by(Sort.Direction.DESC, "lastTouchAt")
         );
@@ -93,24 +95,25 @@ class ApplicationRepositoryTest {
 
     @Test
     void findAllByUserIdAndLastTouchAtBeforeFiltersByCutoff() {
+        UUID userId = UUID.randomUUID();
         Application stale = new Application();
         stale.setCompany("Stale");
         stale.setRole("Dev");
-        stale.setUserId(20L);
+        stale.setUserId(userId);
         stale.setLastTouchAt(LocalDateTime.now().minusDays(45));
         entityManager.persist(stale);
 
         Application fresh = new Application();
         fresh.setCompany("Fresh");
         fresh.setRole("Dev");
-        fresh.setUserId(20L);
+        fresh.setUserId(userId);
         fresh.setLastTouchAt(LocalDateTime.now().minusDays(5));
         entityManager.persist(fresh);
 
         entityManager.flush();
 
         List<Application> results = applicationRepository.findAllByUserIdAndLastTouchAtBefore(
-                20L,
+                userId,
                 LocalDateTime.now().minusDays(30),
                 Sort.by(Sort.Direction.ASC, "lastTouchAt")
         );

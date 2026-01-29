@@ -41,7 +41,8 @@ class JwtAuthFilterTest {
     @Test
     void validTokenReturnsUserPayload() throws Exception {
         User user = new User();
-        user.setId(42L);
+        java.util.UUID userId = java.util.UUID.randomUUID();
+        user.setId(userId);
         user.setEmail("me@example.com");
         String token = jwtService.generateToken(user);
 
@@ -49,7 +50,7 @@ class JwtAuthFilterTest {
                         .header("Authorization", "Bearer " + token)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").value(42))
+                .andExpect(jsonPath("$.userId").value(userId.toString()))
                 .andExpect(jsonPath("$.email").value("me@example.com"));
     }
 }

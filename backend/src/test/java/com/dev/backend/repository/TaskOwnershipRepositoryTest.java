@@ -2,6 +2,7 @@ package com.dev.backend.repository;
 
 import com.dev.backend.model.Application;
 import com.dev.backend.model.Task;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -22,10 +23,13 @@ class TaskOwnershipRepositoryTest {
 
     @Test
     void findByIdAndApplicationUserIdBlocksOtherUsers() {
+        UUID ownerId = UUID.randomUUID();
+        UUID otherId = UUID.randomUUID();
+
         Application ownerApp = new Application();
         ownerApp.setCompany("Acme");
         ownerApp.setRole("Engineer");
-        ownerApp.setUserId(300L);
+        ownerApp.setUserId(ownerId);
         entityManager.persist(ownerApp);
 
         Task task = new Task();
@@ -35,16 +39,19 @@ class TaskOwnershipRepositoryTest {
 
         entityManager.flush();
 
-        assertThat(taskRepository.findByIdAndApplicationUserId(task.getId(), 400L)).isEmpty();
-        assertThat(taskRepository.findByIdAndApplicationUserId(task.getId(), 300L)).isPresent();
+        assertThat(taskRepository.findByIdAndApplicationUserId(task.getId(), otherId)).isEmpty();
+        assertThat(taskRepository.findByIdAndApplicationUserId(task.getId(), ownerId)).isPresent();
     }
 
     @Test
     void findAllByApplicationUserIdReturnsOnlyOwnedRows() {
+        UUID ownerId = UUID.randomUUID();
+        UUID otherId = UUID.randomUUID();
+
         Application ownerApp = new Application();
         ownerApp.setCompany("OwnerCo");
         ownerApp.setRole("Engineer");
-        ownerApp.setUserId(301L);
+        ownerApp.setUserId(ownerId);
         entityManager.persist(ownerApp);
 
         Task ownerTask = new Task();
@@ -55,7 +62,7 @@ class TaskOwnershipRepositoryTest {
         Application otherApp = new Application();
         otherApp.setCompany("OtherCo");
         otherApp.setRole("Analyst");
-        otherApp.setUserId(302L);
+        otherApp.setUserId(otherId);
         entityManager.persist(otherApp);
 
         Task otherTask = new Task();
@@ -65,7 +72,7 @@ class TaskOwnershipRepositoryTest {
 
         entityManager.flush();
 
-        assertThat(taskRepository.findAllByApplicationUserId(301L))
+        assertThat(taskRepository.findAllByApplicationUserId(ownerId))
                 .extracting(Task::getId)
                 .containsExactly(ownerTask.getId());
     }

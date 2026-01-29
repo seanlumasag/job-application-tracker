@@ -17,6 +17,7 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -192,7 +193,7 @@ public class AuthService {
         refreshTokenRepository.deleteAllByUserId(user.getId());
     }
 
-    public MfaSetupResponse setupMfa(Long userId) {
+    public MfaSetupResponse setupMfa(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         String secret = totpService.generateSecret();
@@ -203,7 +204,7 @@ public class AuthService {
         return new MfaSetupResponse(secret, otpauthUrl);
     }
 
-    public void enableMfa(Long userId, String code) {
+    public void enableMfa(UUID userId, String code) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         if (user.getMfaSecret() == null || !totpService.verifyCode(user.getMfaSecret(), code)) {
@@ -213,7 +214,7 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    public void disableMfa(Long userId, String code) {
+    public void disableMfa(UUID userId, String code) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
         if (user.isMfaEnabled()) {

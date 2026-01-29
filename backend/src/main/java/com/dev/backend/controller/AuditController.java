@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,7 +34,7 @@ public class AuditController {
             @RequestParam(name = "size", defaultValue = "25") @Min(1) @Max(100) int size,
             HttpServletRequest servletRequest
     ) {
-        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        UUID userId = (UUID) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }

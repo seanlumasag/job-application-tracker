@@ -1,16 +1,18 @@
 package com.dev.backend.security;
 
+import java.util.UUID;
+
 public class AuthenticatedUser {
 
-    private final Long id;
+    private final UUID id;
     private final String email;
 
-    public AuthenticatedUser(Long id, String email) {
+    public AuthenticatedUser(UUID id, String email) {
         this.id = id;
         this.email = email;
     }
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 

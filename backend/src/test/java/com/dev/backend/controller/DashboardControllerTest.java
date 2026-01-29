@@ -177,7 +177,7 @@ class DashboardControllerTest {
         return userRepository.save(user);
     }
 
-    private Application createApplication(Long userId, String company, String role, Stage stage) {
+    private Application createApplication(java.util.UUID userId, String company, String role, Stage stage) {
         Application application = new Application();
         application.setCompany(company);
         application.setRole(role);

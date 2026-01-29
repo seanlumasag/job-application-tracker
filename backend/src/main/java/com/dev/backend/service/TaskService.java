@@ -10,6 +10,7 @@ import com.dev.backend.repository.TaskRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,7 @@ public class TaskService {
         this.auditService = auditService;
     }
 
-    public Task create(Long userId, Long applicationId, TaskCreateRequest request) {
+    public Task create(UUID userId, Long applicationId, TaskCreateRequest request) {
         Application application = applicationRepository.findByIdAndUserId(applicationId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
         Task task = new Task();
@@ -59,14 +60,14 @@ public class TaskService {
         return saved;
     }
 
-    public List<Task> listForApplication(Long userId, Long applicationId) {
+    public List<Task> listForApplication(UUID userId, Long applicationId) {
         Application application = applicationRepository.findByIdAndUserId(applicationId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found"));
         Sort sort = Sort.by(Sort.Direction.ASC, "dueAt").and(Sort.by(Sort.Direction.ASC, "createdAt"));
         return taskRepository.findAllByApplicationId(application.getId(), sort);
     }
 
-    public Task update(Long userId, Long taskId, TaskUpdateRequest request) {
+    public Task update(UUID userId, Long taskId, TaskUpdateRequest request) {
         Task task = taskRepository.findByIdAndApplicationUserId(taskId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
         task.setTitle(request.getTitle());
@@ -77,7 +78,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Task updateStatus(Long userId, Long taskId, TaskStatus status) {
+    public Task updateStatus(UUID userId, Long taskId, TaskStatus status) {
         Task task = taskRepository.findByIdAndApplicationUserId(taskId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
         TaskStatus previousStatus = task.getStatus();
@@ -105,7 +106,7 @@ public class TaskService {
         return saved;
     }
 
-    public List<Task> listDueToday(Long userId) {
+    public List<Task> listDueToday(UUID userId) {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime startOfTomorrow = startOfDay.plusDays(1);
         Sort sort = Sort.by(Sort.Direction.ASC, "dueAt");
@@ -120,7 +121,7 @@ public class TaskService {
         return filterSnoozed(tasks, LocalDateTime.now());
     }
 
-    public List<Task> listDueThisWeek(Long userId) {
+    public List<Task> listDueThisWeek(UUID userId) {
         LocalDate today = LocalDate.now();
         LocalDate startOfWeekDate = today.with(java.time.temporal.WeekFields.ISO.dayOfWeek(), 1);
         LocalDateTime startOfWeek = startOfWeekDate.atStartOfDay();
@@ -137,7 +138,7 @@ public class TaskService {
         return filterSnoozed(tasks, LocalDateTime.now());
     }
 
-    public List<Task> listOverdue(Long userId) {
+    public List<Task> listOverdue(UUID userId) {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         Sort sort = Sort.by(Sort.Direction.ASC, "dueAt");
         List<Task> tasks = taskRepository.findAllByApplicationUserIdAndStatusAndDueAtLessThan(

@@ -81,7 +81,7 @@ class AuditControllerTest {
                 .andExpect(jsonPath("$[0].payload", is("\"owned\"")));
     }
 
-    private AuditEvent buildEvent(Long userId, String payload, LocalDateTime createdAt) {
+    private AuditEvent buildEvent(java.util.UUID userId, String payload, LocalDateTime createdAt) {
         AuditEvent event = new AuditEvent();
         event.setUserId(userId);
         event.setEventType("test.event");

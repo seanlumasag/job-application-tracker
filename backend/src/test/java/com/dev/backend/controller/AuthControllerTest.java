@@ -42,10 +42,10 @@ class AuthControllerTest {
         request.setPassword("StrongPass123");
 
         mockMvc.perform(post("/api/auth/signup")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.userId").isNumber())
+                .andExpect(jsonPath("$.userId").isString())
                 .andExpect(jsonPath("$.email").value("newuser@example.com"))
                 .andExpect(jsonPath("$.token").isString());
 
@@ -94,10 +94,10 @@ class AuthControllerTest {
         request.setPassword("Password123");
 
         mockMvc.perform(post("/api/auth/login")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId").isNumber())
+                .andExpect(jsonPath("$.userId").isString())
                 .andExpect(jsonPath("$.email").value("login@example.com"))
                 .andExpect(jsonPath("$.token").isString());
     }

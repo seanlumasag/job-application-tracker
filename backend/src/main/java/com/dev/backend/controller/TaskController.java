@@ -9,6 +9,7 @@ import com.dev.backend.service.TaskService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,7 +40,7 @@ public class TaskController {
             @Valid @RequestBody TaskCreateRequest request,
             HttpServletRequest servletRequest
     ) {
-        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        UUID userId = (UUID) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -51,7 +52,7 @@ public class TaskController {
             @PathVariable("applicationId") Long applicationId,
             HttpServletRequest servletRequest
     ) {
-        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        UUID userId = (UUID) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -66,7 +67,7 @@ public class TaskController {
             @Valid @RequestBody TaskStatusUpdateRequest request,
             HttpServletRequest servletRequest
     ) {
-        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        UUID userId = (UUID) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -79,7 +80,7 @@ public class TaskController {
             @Valid @RequestBody TaskUpdateRequest request,
             HttpServletRequest servletRequest
     ) {
-        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        UUID userId = (UUID) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -88,7 +89,7 @@ public class TaskController {
 
     @GetMapping("/tasks/due/today")
     public List<TaskResponse> listDueToday(HttpServletRequest servletRequest) {
-        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        UUID userId = (UUID) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -99,7 +100,7 @@ public class TaskController {
 
     @GetMapping("/tasks/due/week")
     public List<TaskResponse> listDueThisWeek(HttpServletRequest servletRequest) {
-        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        UUID userId = (UUID) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -110,7 +111,7 @@ public class TaskController {
 
     @GetMapping("/tasks/overdue")
     public List<TaskResponse> listOverdue(HttpServletRequest servletRequest) {
-        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        UUID userId = (UUID) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }

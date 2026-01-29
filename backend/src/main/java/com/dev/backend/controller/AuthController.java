@@ -15,6 +15,7 @@ import com.dev.backend.security.JwtAuthFilter;
 import com.dev.backend.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -81,7 +82,7 @@ public class AuthController {
 
     @PostMapping("/mfa/setup")
     public MfaSetupResponse setupMfa(HttpServletRequest servletRequest) {
-        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        UUID userId = (UUID) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -94,7 +95,7 @@ public class AuthController {
             @Valid @RequestBody MfaCodeRequest request,
             HttpServletRequest servletRequest
     ) {
-        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        UUID userId = (UUID) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }
@@ -107,7 +108,7 @@ public class AuthController {
             @Valid @RequestBody MfaCodeRequest request,
             HttpServletRequest servletRequest
     ) {
-        Long userId = (Long) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
+        UUID userId = (UUID) servletRequest.getAttribute(JwtAuthFilter.USER_ID_ATTR);
         if (userId == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Unauthorized");
         }

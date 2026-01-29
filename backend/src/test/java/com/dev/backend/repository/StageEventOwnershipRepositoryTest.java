@@ -3,6 +3,7 @@ package com.dev.backend.repository;
 import com.dev.backend.model.Application;
 import com.dev.backend.model.Stage;
 import com.dev.backend.model.StageEvent;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -23,10 +24,13 @@ class StageEventOwnershipRepositoryTest {
 
     @Test
     void findByIdAndApplicationUserIdBlocksOtherUsers() {
+        UUID ownerId = UUID.randomUUID();
+        UUID otherId = UUID.randomUUID();
+
         Application ownerApp = new Application();
         ownerApp.setCompany("Acme");
         ownerApp.setRole("Engineer");
-        ownerApp.setUserId(500L);
+        ownerApp.setUserId(ownerId);
         entityManager.persist(ownerApp);
 
         StageEvent event = new StageEvent();
@@ -37,16 +41,19 @@ class StageEventOwnershipRepositoryTest {
 
         entityManager.flush();
 
-        assertThat(stageEventRepository.findByIdAndApplicationUserId(event.getId(), 600L)).isEmpty();
-        assertThat(stageEventRepository.findByIdAndApplicationUserId(event.getId(), 500L)).isPresent();
+        assertThat(stageEventRepository.findByIdAndApplicationUserId(event.getId(), otherId)).isEmpty();
+        assertThat(stageEventRepository.findByIdAndApplicationUserId(event.getId(), ownerId)).isPresent();
     }
 
     @Test
     void findAllByApplicationUserIdReturnsOnlyOwnedRows() {
+        UUID ownerId = UUID.randomUUID();
+        UUID otherId = UUID.randomUUID();
+
         Application ownerApp = new Application();
         ownerApp.setCompany("OwnerCo");
         ownerApp.setRole("Engineer");
-        ownerApp.setUserId(501L);
+        ownerApp.setUserId(ownerId);
         entityManager.persist(ownerApp);
 
         StageEvent ownerEvent = new StageEvent();
@@ -58,7 +65,7 @@ class StageEventOwnershipRepositoryTest {
         Application otherApp = new Application();
         otherApp.setCompany("OtherCo");
         otherApp.setRole("Analyst");
-        otherApp.setUserId(502L);
+        otherApp.setUserId(otherId);
         entityManager.persist(otherApp);
 
         StageEvent otherEvent = new StageEvent();
@@ -69,7 +76,7 @@ class StageEventOwnershipRepositoryTest {
 
         entityManager.flush();
 
-        assertThat(stageEventRepository.findAllByApplicationUserId(501L))
+        assertThat(stageEventRepository.findAllByApplicationUserId(ownerId))
                 .extracting(StageEvent::getId)
                 .containsExactly(ownerEvent.getId());
     }

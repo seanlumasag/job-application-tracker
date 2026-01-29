@@ -1,12 +1,12 @@
 INSERT INTO users (id, email, password_hash, email_verified, email_verified_at, mfa_enabled, mfa_secret, created_at, updated_at)
 VALUES
-    (1, 'demo@example.com', '$2a$10$7EqJtq98hPqEX7fNZaFWoO5T0C5Ul9kY01/1i/8uRIXV4Yg8Zb9oS', true, now(), false, null, now(), now())
+    ('00000000-0000-0000-0000-000000000001', 'demo@example.com', '$2a$10$7EqJtq98hPqEX7fNZaFWoO5T0C5Ul9kY01/1i/8uRIXV4Yg8Zb9oS', true, now(), false, null, now(), now())
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO applications (id, company, role, job_url, location, notes, stage, last_touch_at, stage_changed_at, user_id, created_at, updated_at)
 VALUES
-    (1, 'Acme', 'Backend Engineer', 'https://example.com/jobs/1', 'Remote', 'Referred by Sam', 'SAVED', now(), now(), 1, now(), now()),
-    (2, 'Beta Corp', 'Full Stack Developer', 'https://example.com/jobs/2', 'New York, NY', 'Applied via LinkedIn', 'APPLIED', now(), now(), 1, now(), now())
+    (1, 'Acme', 'Backend Engineer', 'https://example.com/jobs/1', 'Remote', 'Referred by Sam', 'SAVED', now(), now(), '00000000-0000-0000-0000-000000000001', now(), now()),
+    (2, 'Beta Corp', 'Full Stack Developer', 'https://example.com/jobs/2', 'New York, NY', 'Applied via LinkedIn', 'APPLIED', now(), now(), '00000000-0000-0000-0000-000000000001', now(), now())
 ON CONFLICT (id) DO NOTHING;
 
 UPDATE applications
@@ -26,4 +26,3 @@ ON CONFLICT (id) DO NOTHING;
 SELECT setval('applications_id_seq', (SELECT COALESCE(MAX(id), 1) FROM applications));
 SELECT setval('tasks_id_seq', (SELECT COALESCE(MAX(id), 1) FROM tasks));
 SELECT setval('stage_events_id_seq', (SELECT COALESCE(MAX(id), 1) FROM stage_events));
-SELECT setval('users_id_seq', (SELECT COALESCE(MAX(id), 1) FROM users));
