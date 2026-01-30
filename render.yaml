@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: job-application-tracker-backend
+    env: java
+    plan: free
+    rootDir: .
+    buildCommand: mvn -f backend/pom.xml -DskipTests package
+    startCommand: java -jar backend/target/backend-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: JAVA_VERSION
+        value: "17"
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
