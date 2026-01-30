@@ -128,6 +128,7 @@ type AppContextValue = {
   goToTasks: () => void;
   goToMetrics: () => void;
   goToSettings: () => void;
+  goToLanding: () => void;
   formatDate: (value: string) => string;
   formatDateTime: (value: string) => string;
   formatRelative: (value: string) => string;
@@ -214,6 +215,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
   const goToTasks = () => onNavigate('/app/tasks');
   const goToMetrics = () => onNavigate('/app/metrics');
   const goToSettings = () => onNavigate('/app/settings');
+  const goToLanding = () => onNavigate('/');
 
   useEffect(() => {
     if (!token) {
@@ -232,9 +234,10 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
       setDisplayError('');
       return;
     }
-    refreshDashboard();
-    loadAuditEvents();
-    loadStaleApplications(staleDays);
+    const suppressErrors = view === 'settings';
+    refreshDashboard(suppressErrors);
+    loadAuditEvents(suppressErrors);
+    loadStaleApplications(staleDays, suppressErrors);
     void (async () => {
       try {
         const me = await authService.me();
@@ -243,7 +246,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
         setProfileEmail('');
       }
     })();
-  }, [token]);
+  }, [token, view, staleDays]);
 
   useEffect(() => {
     const delayMs = 800;
@@ -317,18 +320,18 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
 
   useEffect(() => {
     if (!token) return;
-    refreshDashboard();
-  }, [token, nextActionsWindow, activityWindow]);
+    refreshDashboard(view === 'settings');
+  }, [token, nextActionsWindow, activityWindow, view]);
 
   useEffect(() => {
     if (!token) return;
-    loadStaleApplications(staleDays);
-  }, [token, staleDays]);
+    loadStaleApplications(staleDays, view === 'settings');
+  }, [token, staleDays, view]);
 
   useEffect(() => {
     if (!token) return;
-    refreshApplications(stageFilter);
-  }, [token, stageFilter]);
+    refreshApplications(stageFilter, view === 'settings');
+  }, [token, stageFilter, view]);
 
   useEffect(() => {
     if (!token) return;
@@ -377,7 +380,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     void loadTasks(selectedApp.id);
   }, [selectedApp]);
 
-  const refreshDashboard = async () => {
+  const refreshDashboard = async (silent = false) => {
     setLoading(true);
     try {
       const [summaryData, nextActionsData, activityData] = await Promise.all([
@@ -388,10 +391,10 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
       setSummary(summaryData);
       setNextActions(nextActionsData);
       setActivity(activityData);
-      setError('');
+      if (!silent) setError('');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to load dashboard data';
-      setError(message);
+      if (!silent) setError(message);
     } finally {
       setLoading(false);
     }
@@ -406,10 +409,15 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
         authMode === 'signup'
           ? await authService.signup(email, password)
           : await authService.login(email, password);
-      setToken(response.token);
-      setEmail('');
-      setPassword('');
-      goToDashboard();
+      if (response.token) {
+        setToken(response.token);
+        setEmail('');
+        setPassword('');
+        goToDashboard();
+      } else {
+        setError('Check your email to verify your account before signing in.');
+        setPassword('');
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Authentication failed';
       setError(message);
@@ -911,6 +919,7 @@ function AppLayout({ routePath, onNavigate, children }: AppLayoutProps) {
     goToTasks,
     goToMetrics,
     goToSettings,
+    goToLanding,
     formatDate,
     formatDateTime,
     formatRelative,

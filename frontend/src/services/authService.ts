@@ -12,8 +12,8 @@ export const authService = {
     return response.data;
   },
 
-  async me(): Promise<{ userId: number; email: string }> {
-    const response = await apiClient.get<{ userId: number; email: string }>('/me');
+  async me(): Promise<{ userId: string; email: string }> {
+    const response = await apiClient.get<{ userId: string; email: string }>('/me');
     return response.data;
   },
 
@@ -36,5 +36,9 @@ export const authService = {
 
   async disableMfa(code: string): Promise<void> {
     await apiClient.post('/auth/mfa/disable', { code });
+  },
+
+  async deleteAccount(password: string): Promise<void> {
+    await apiClient.delete('/me', { data: { password } });
   },
 };

@@ -116,7 +116,6 @@ function LandingPage({ onNavigate }: LandingPageProps) {
           <div className="brand-mark">JT</div>
           <div className="brand-copy">
             <span className="brand-name">JobTrack</span>
-            <span className="brand-sub">workspace</span>
           </div>
         </div>
         <nav className="nav-links">

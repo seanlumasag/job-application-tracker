@@ -9,6 +9,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -23,10 +27,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final ObjectMapper objectMapper;
+    private final List<String> allowedOrigins;
 
-    public JwtAuthFilter(JwtService jwtService, ObjectMapper objectMapper) {
+    public JwtAuthFilter(
+            JwtService jwtService,
+            ObjectMapper objectMapper,
+            @Value("${app.cors.allowed-origins:*}") String allowedOrigins
+    ) {
         this.jwtService = jwtService;
         this.objectMapper = objectMapper;
+        this.allowedOrigins = Arrays.stream(allowedOrigins.split(","))
+                .map(String::trim)
+                .filter(origin -> !origin.isEmpty())
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -78,6 +91,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private void writeUnauthorized(HttpServletRequest request, HttpServletResponse response, String message)
             throws IOException {
+        addCorsHeaders(request, response);
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         ErrorResponse body = new ErrorResponse(
@@ -89,5 +103,22 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 java.util.List.of()
         );
         response.getWriter().write(objectMapper.writeValueAsString(body));
+    }
+
+    private void addCorsHeaders(HttpServletRequest request, HttpServletResponse response) {
+        String origin = request.getHeader(HttpHeaders.ORIGIN);
+        if (origin == null || origin.isBlank()) {
+            return;
+        }
+        if (!allowedOrigins.isEmpty() && !allowedOrigins.contains("*") && !allowedOrigins.contains(origin)) {
+            return;
+        }
+        response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, origin);
+        response.setHeader(HttpHeaders.VARY, HttpHeaders.ORIGIN);
+        response.setHeader(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+        response.setHeader(
+                HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS,
+                "Authorization, Content-Type, Accept, Origin, X-Requested-With"
+        );
     }
 }

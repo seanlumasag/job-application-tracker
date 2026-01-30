@@ -85,7 +85,10 @@ export interface User {
 }
 
 export interface AuthResponse {
-  userId: number;
+  userId: string;
   email: string;
-  token: string;
+  token?: string | null;
+  refreshToken?: string | null;
+  emailVerified?: boolean;
+  mfaEnabled?: boolean;
 }

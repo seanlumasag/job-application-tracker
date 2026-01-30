@@ -34,6 +34,7 @@ function AuthPage({ mode, onNavigate }: AuthPageProps) {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
 
   const copy = COPY[mode];
 
@@ -47,13 +48,19 @@ function AuthPage({ mode, onNavigate }: AuthPageProps) {
     event.preventDefault();
     setBusy(true);
     setError('');
+    setNotice('');
     try {
       const response =
         mode === 'signup'
           ? await authService.signup(email, password)
           : await authService.login(email, password);
-      setToken(response.token);
-      onNavigate('/app');
+      if (response.token) {
+        setToken(response.token);
+        onNavigate('/app');
+      } else {
+        setNotice('Check your email to verify your account before signing in.');
+      }
+      setPassword('');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Authentication failed.';
       setError(message);
@@ -73,7 +80,6 @@ function AuthPage({ mode, onNavigate }: AuthPageProps) {
             <div className="auth-mark">JT</div>
             <div>
               <div className="auth-name">JobTrack</div>
-              <div className="auth-sub">workspace</div>
             </div>
           </div>
           <h1>{copy.title}</h1>
@@ -101,6 +107,7 @@ function AuthPage({ mode, onNavigate }: AuthPageProps) {
               />
             </label>
             {error && <p className="auth-error">{error}</p>}
+            {notice && <p className="auth-notice">{notice}</p>}
             <button type="submit" className="auth-submit" disabled={busy}>
               {busy ? 'Working…' : copy.cta}
             </button>

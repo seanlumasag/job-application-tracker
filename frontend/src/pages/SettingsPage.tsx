@@ -1,23 +1,36 @@
 import { useEffect, useState } from 'react';
+import { useAuth } from '../lib/authContext';
 import { authService } from '../services/authService';
 import { useAppContext } from './AppLayout';
 
-type MfaState = {
-  secret: string;
-  otpauthUrl: string;
-};
-
 function SettingsPage() {
-  const { token } = useAppContext();
-  const [profile, setProfile] = useState<{ userId: number; email: string } | null>(null);
+  const { token, goToLanding } = useAppContext();
+  const { setToken } = useAuth();
+  const [profile, setProfile] = useState<{ userId: string; email: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [resetEmail, setResetEmail] = useState('');
-  const [resetMessage, setResetMessage] = useState('');
-  const [mfaSetup, setMfaSetup] = useState<MfaState | null>(null);
-  const [mfaCode, setMfaCode] = useState('');
-  const [mfaBusy, setMfaBusy] = useState(false);
-  const [mfaMessage, setMfaMessage] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deleteBusy, setDeleteBusy] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState('');
+  const [copyMessage, setCopyMessage] = useState('');
+
+  const formatUserId = (userId: string) => {
+    if (userId.length <= 12) return userId;
+    return `${userId.slice(0, 8)}…${userId.slice(-4)}`;
+  };
+
+  const handleCopyUserId = async (userId: string) => {
+    setCopyMessage('');
+    try {
+      await navigator.clipboard.writeText(userId);
+      setCopyMessage('Copied');
+      window.setTimeout(() => setCopyMessage(''), 1500);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to copy';
+      setCopyMessage(message);
+      window.setTimeout(() => setCopyMessage(''), 2000);
+    }
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -27,7 +40,6 @@ function SettingsPage() {
       try {
         const me = await authService.me();
         setProfile(me);
-        setResetEmail(me.email);
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to load profile';
         setError(message);
@@ -38,68 +50,23 @@ function SettingsPage() {
     void load();
   }, [token]);
 
-  const handlePasswordReset = async (event: React.FormEvent) => {
+  const handleDeleteAccount = async (event: React.FormEvent) => {
     event.preventDefault();
-    setResetMessage('');
+    if (!deletePassword) return;
+    setDeleteMessage('');
     setError('');
+    setDeleteBusy(true);
     try {
-      const response = await authService.requestPasswordReset(resetEmail);
-      setResetMessage(response.message);
+      await authService.deleteAccount(deletePassword);
+      setToken('');
+      sessionStorage.removeItem('jat.token');
+      goToLanding();
+      window.location.assign('/');
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to request reset';
-      setError(message);
-    }
-  };
-
-  const handleMfaSetup = async () => {
-    setMfaMessage('');
-    setError('');
-    setMfaBusy(true);
-    try {
-      const response = await authService.setupMfa();
-      setMfaSetup(response);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to setup MFA';
+      const message = err instanceof Error ? err.message : 'Failed to delete account';
       setError(message);
     } finally {
-      setMfaBusy(false);
-    }
-  };
-
-  const handleMfaEnable = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!mfaCode) return;
-    setMfaMessage('');
-    setError('');
-    setMfaBusy(true);
-    try {
-      await authService.enableMfa(mfaCode);
-      setMfaMessage('MFA enabled.');
-      setMfaCode('');
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to enable MFA';
-      setError(message);
-    } finally {
-      setMfaBusy(false);
-    }
-  };
-
-  const handleMfaDisable = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (!mfaCode) return;
-    setMfaMessage('');
-    setError('');
-    setMfaBusy(true);
-    try {
-      await authService.disableMfa(mfaCode);
-      setMfaMessage('MFA disabled.');
-      setMfaCode('');
-      setMfaSetup(null);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to disable MFA';
-      setError(message);
-    } finally {
-      setMfaBusy(false);
+      setDeleteBusy(false);
     }
   };
 
@@ -125,67 +92,45 @@ function SettingsPage() {
             </div>
             <div className="settings-row">
               <span>User ID</span>
-              <strong>{profile.userId}</strong>
+              <div className="settings-value">
+                <strong className="settings-user-id" title={profile.userId}>
+                  {formatUserId(profile.userId)}
+                </strong>
+                <button
+                  type="button"
+                  className="text-button settings-copy"
+                  onClick={() => handleCopyUserId(profile.userId)}
+                  aria-label="Copy user ID"
+                  title={copyMessage || 'Copy full UUID'}
+                >
+                  {copyMessage || 'Copy'}
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="settings-card">
-            <h3>Password reset</h3>
-            <form className="settings-form" onSubmit={handlePasswordReset}>
+          <div className="settings-card danger-card">
+            <h3>Delete account</h3>
+            <p className="muted">
+              This permanently deletes your account and all associated data. This action cannot be undone.
+            </p>
+            <form className="settings-form" onSubmit={handleDeleteAccount}>
               <label className="field">
-                <span>Reset email</span>
+                <span>Confirm password</span>
                 <input
-                  type="email"
-                  value={resetEmail}
-                  onChange={(event) => setResetEmail(event.target.value)}
+                  type="password"
+                  value={deletePassword}
+                  onChange={(event) => setDeletePassword(event.target.value)}
+                  placeholder="Enter your password"
                   required
                 />
               </label>
-              <button type="submit" className="primary">
-                Send reset link
-              </button>
-              {resetMessage && <p className="muted">{resetMessage}</p>}
-            </form>
-          </div>
-
-          <div className="settings-card">
-            <h3>MFA</h3>
-            <p className="muted">
-              Generate a secret, then confirm with a 6‑digit code from your authenticator app.
-            </p>
-            <div className="settings-actions">
-              <button type="button" className="ghost" onClick={handleMfaSetup} disabled={mfaBusy}>
-                {mfaBusy ? 'Loading…' : 'Generate secret'}
-              </button>
-            </div>
-            {mfaSetup && (
-              <div className="mfa-box">
-                <div>
-                  <span className="muted">Secret</span>
-                  <strong>{mfaSetup.secret}</strong>
-                </div>
-                <div className="mfa-url">{mfaSetup.otpauthUrl}</div>
-              </div>
-            )}
-            <form className="settings-form" onSubmit={handleMfaEnable}>
-              <label className="field">
-                <span>6‑digit code</span>
-                <input
-                  type="text"
-                  value={mfaCode}
-                  onChange={(event) => setMfaCode(event.target.value)}
-                  placeholder="123456"
-                />
-              </label>
               <div className="settings-actions">
-                <button type="submit" className="primary" disabled={mfaBusy}>
-                  Enable MFA
-                </button>
-                <button type="button" className="ghost" onClick={handleMfaDisable} disabled={mfaBusy}>
-                  Disable MFA
+                <button type="submit" className="ghost danger" disabled={deleteBusy}>
+                  {deleteBusy ? 'Deleting…' : 'Delete account'}
                 </button>
               </div>
-              {mfaMessage && <p className="muted">{mfaMessage}</p>}
+              {deleteMessage && <p className="muted">{deleteMessage}</p>}
             </form>
           </div>
         </div>

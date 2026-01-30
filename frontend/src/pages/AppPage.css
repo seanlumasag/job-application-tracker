@@ -1470,12 +1470,42 @@
   gap: 12px;
 }
 
+.settings-card.danger-card {
+  border-color: rgba(176, 65, 50, 0.25);
+  background: #fff7f6;
+}
+
 .settings-row {
   display: flex;
   justify-content: space-between;
   gap: 12px;
   color: #41485a;
 }
+
+.settings-row span {
+  white-space: nowrap;
+  min-width: 88px;
+}
+
+.settings-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.settings-user-id {
+  font-family: "SFMono-Regular", "Menlo", "Monaco", "Consolas", "Liberation Mono", monospace;
+  font-size: 14px;
+  color: #2f3443;
+}
+
+.settings-copy {
+  font-size: 12px;
+  padding: 6px 8px;
+  border-radius: 10px;
+}
+
 
 .settings-form {
   display: flex;
