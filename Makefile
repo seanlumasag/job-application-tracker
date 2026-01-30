@@ -19,7 +19,7 @@ backend-setup:
 	cd backend && mvn clean install
 
 backend-run:
-	cd backend && mvn spring-boot:run
+	cd backend && SPRING_PROFILES_ACTIVE=dev mvn spring-boot:run
 
 backend-test:
 	cd backend && mvn test
