@@ -1,127 +1,52 @@
 # Job Application Tracker
 
-A backend-first internal tool for managing a job search as an operations workflow, built with **React**, **Spring Boot**, and **Supabase**.
+A full-stack operations dashboard for managing a job search with workflow automation, task follow-ups, and analytics.
+
+## Demo
+
+[Live Site](https://job-application-tracker-seanlumasag.vercel.app)
 
 
-## Backend Product Direction (Incremental)
+## Features
 
-1. **Phase 0 — Repo + Guardrails (Foundation)**
-   - X Init backend project + tooling
-   - X Env config + settings module (`DATABASE_URL`, `JWT_SECRET`, etc.)
-   - X Docker Compose for Postgres + local dev
-   - X DB migration framework + initial migration setup
-   - X Lint/format + pre-commit hooks
-   - X README with local setup + runbook
-2. **Phase 1 — Data Model (Schema-First, No Auth Yet)**
-   - X Applications table (core fields + timestamps)
-   - X Tasks table (`application_id` FK + `due_at` + status)
-   - X Stage events table (`from_stage`/`to_stage` + note + actor)
-   - X Constraints + enums for stage and task status
-   - X Indexes for `due_at`, `stage`, `last_touch_at`, `user_id`
-   - X Seed minimal dev data for local testing
-3. **Phase 2 — Auth + Ownership Enforcement (Non-Negotiable)**
-   - X Users table + basic user model
-   - X Signup + password hashing (or provider hookup if using Supabase Auth)
-   - X Login endpoint returning JWT
-   - X Auth middleware (extract/verify JWT)
-   - X Row ownership enforcement (`user_id` scoped queries everywhere)
-   - X Auth tests (invalid token, cross-user access blocked)
-4. **Phase 3 — Applications API (CRUD + Operational Fields)**
-   - X Create application endpoint (defaults `stage=SAVED`, set `last_touch_at`)
-   - X List applications endpoint (filter by stage, sort by `last_touch_at`)
-   - X Update application endpoint (company/role/link/notes)
-   - X Delete application endpoint (soft delete optional)
-   - X "Stale" query support (older than N days)
-   - X Applications API integration tests (owned rows only)
-5. **Phase 4 — Workflow Engine (State Machine + Audit Trail)**
-   - X Stage enum + allowed transitions map
-   - X Transition endpoint (`PATCH /applications/:id/stage`)
-   - X Validate transitions server-side (reject invalid jumps)
-   - X Write `stage_events` row on every stage change
-   - X Auto-update `last_touch_at` + `stage_changed_at` on transitions
-   - X Workflow tests (valid transitions pass, invalid fail, audit created)
-6. **Phase 5 — Tasks & Follow-ups (Operational Layer)**
-   - X Create task for application (title, `due_at`, notes)
-   - X List tasks for application endpoint
-   - X Mark task done/undone + `completed_at` timestamps
-   - X Global "due today / this week / overdue" endpoints
-   - X Task reminders metadata (`snooze_until` or `follow_up_after`)
-   - X Task query tests (timezone-safe due windows, overdue correctness)
-7. **Phase 6 — Audit Log as a First-Class Feature**
-   - X Generic `audit_events` table (type, entity, payload JSON)
-   - X Emit audit event on stage transition
-   - X Emit audit event on task create/complete
-   - X Audit feed endpoint (latest events, pagination)
-   - X Correlation/request ID logging to tie actions to events
-   - X Audit feed tests (ordering + ownership enforcement)
-8. **Phase 7 — Dashboards (The "Product" Endpoints)**
-   - X Dashboard summary endpoint (counts by stage + overdue tasks)
-   - X Stale applications endpoint (no touch > N days)
-   - X "Next actions" endpoint (tasks due soon + apps needing follow-up)
-   - X Activity endpoint (last 7/30 days transitions + completions)
-   - X Optimize dashboard queries (indexes + explain + tune)
-   - X Dashboard snapshot tests (stable aggregates)
-9. **Phase 8 — Hardening (Real-World Backend Work)**
-   - X Consistent error format + global exception handler
-   - X Input validation + request schemas (reject garbage early)
-   - X Rate limit auth + sensitive endpoints
-   - X CORS config + security headers
-   - X Structured logging + healthcheck + metrics endpoint
-   - X End-to-end test suite (SAVED → OFFER happy path)
-10. **Phase 9 — Deploy (Proof It Runs Outside Your Laptop)**
-   - Production config (envs, DB SSL, JWT rotation plan)
-   - Migration run step in startup pipeline
-   - Deploy backend (Render/Railway/Fly) + managed Postgres
-   - CI pipeline (lint, tests, migrations check)
-   - Seed/admin script for your own account
-   - Deployment guide + API docs (OpenAPI/Swagger)
+- JWT-based auth with refresh flow and ownership-scoped data
+- Application pipeline with stage transitions and audit trail
+- Task system with due-today/this-week/overdue views
+- Dashboard summaries for stage counts, stale apps, and activity trends
+- API health, metrics, and structured validation/error handling
 
-## Frontend Product Direction (Incremental)
+## Tech Stack (and why)
 
-1. **Phase 0 — UI Foundation**
-   - X Vite + React + TypeScript setup
-   - X Basic routing/layout shell
-   - X API client wiring + env config
-2. **Phase 1 — Core Views (Read-Only)**
-   - X Dashboard summary cards (counts by stage + overdue tasks)
-   - X Applications list (stage filter + sort by last touch)
-   - X Application detail page (notes + history sections)
-3. **Phase 2 — Auth UX**
-   - X Signup + login screens
-   - X Store JWT securely (memory + refresh on reload)
-   - X Guarded routes + logout flow
-4. **Phase 3 — CRUD Flows**
-   - X Create application form
-   - X Edit application fields + notes
-   - X Delete (or archive) application action
-5. **Phase 4 — Workflow UI**
-   - X Stage transition controls with validation messages
-   - X Stage history timeline (stage events)
-   - X Auto-update last touch indicator
-6. **Phase 5 — Tasks & Follow-ups**
-   - X Create/edit tasks for application
-   - X Task list filters (due today/this week/overdue)
-   - X Mark done/undone with optimistic updates
-7. **Phase 6 — Audit & Activity**
-   - X Activity feed (latest transitions + task events)
-   - X Detail view per event (actor + note)
-8. **Phase 7 — Dashboards (Product UI)**
-   - X Stale applications view
-   - X Next actions panel (tasks due soon + apps needing follow-up)
-   - X Activity trends (7/30 days)
-9. **Phase 8 — Hardening**
-   - X Form validation + error states
-   - X Empty states + skeleton loading
-   - X Performance tuning for large lists
-10. **Phase 9 — Release**
-   - Build + deploy frontend
-   - CI checks (lint + tests)
-   - UI docs + basic usage guide
+### Backend
+- Spring Boot 3 (Java 17) — mature ecosystem, strong layering for service logic
+- PostgreSQL (via Supabase) — relational integrity for applications, tasks, and stage events
+- Spring Data JPA — rapid CRUD with explicit domain models
 
+### Frontend
+- React + TypeScript — predictable UI state with type-safe models
+- Vite — fast local DX and build times
+- Axios — clear API client boundaries
 
-## Quick Start
+### Infra/DevEx
+- Docker Compose — reproducible local backend/dev DB setup
+- Makefile — one-command developer workflows
 
-Get running fast with the Make targets:
+## Architecture
+
+```
+Browser → React UI → Spring Boot API → Postgres (Supabase)
+                            ↓
+                         Audit + Tasks
+```
+
+Flow overview:
+- Frontend calls REST endpoints for auth, apps, tasks, and dashboards
+- API enforces ownership, validation, and workflow rules
+- Postgres stores core workflow entities and audit events
+
+## Getting Started
+
+Quick start via Make targets:
 
 ```bash
 make backend-setup
@@ -130,28 +55,9 @@ make frontend-setup
 make frontend-run
 ```
 
-For a guided walkthrough, see [QUICKSTART.md](./QUICKSTART.md).
-
-## Documentation
-
-- [Quick Start Guide](./QUICKSTART.md)
-- [Architecture Overview](./ARCHITECTURE.md)
-- [Deployment Guide](./DEPLOYMENT.md)
-
-## Prerequisites
-
-- Java 17+
-- Maven 3.6+
-- Node.js 18+ and npm
-- Supabase account
-
 ## Configuration
 
-### Supabase
-1. Create a project at [Supabase](https://supabase.com)
-2. Copy database connection details from **Project Settings > Database**
-
-### Backend
+### Backend (Supabase)
 1. `cd backend`
 2. `cp .env.example .env`
 3. Set:
@@ -171,114 +77,33 @@ For a guided walkthrough, see [QUICKSTART.md](./QUICKSTART.md).
    ```
 4. Run: `make frontend-run`
 
-## Make Targets
+## Usage
 
-- `make backend-setup` install backend dependencies
-- `make backend-run` run backend dev server
-- `make backend-test` run backend tests
-- `make backend-build` build backend jar
-- `make frontend-setup` install frontend dependencies
-- `make frontend-run` run frontend dev server
-- `make frontend-lint` lint frontend
-- `make frontend-build` build frontend
+1. Sign up and log in
+2. Create a job application
+3. Move it through pipeline stages
+4. Add and complete follow-up tasks
+5. Review dashboard insights (stale apps, next actions, activity)
 
-## API Endpoints
-
-- `GET /api/health`
-- `GET /api/metrics`
-- `POST /api/auth/signup`
-- `POST /api/auth/login`
-- `POST /api/auth/refresh`
-- `POST /api/auth/logout`
-- `POST /api/auth/verify-email`
-- `POST /api/auth/verify-email/resend`
-- `POST /api/auth/password/forgot`
-- `POST /api/auth/password/reset`
-- `POST /api/auth/mfa/setup`
-- `POST /api/auth/mfa/enable`
-- `POST /api/auth/mfa/disable`
-- `GET /api/me`
-- `GET /api/applications`
-- `POST /api/applications`
-- `PUT /api/applications/{id}`
-- `PATCH /api/applications/{id}/stage`
-- `DELETE /api/applications/{id}`
-- `POST /api/applications/{id}/tasks`
-- `GET /api/applications/{id}/tasks`
-- `PATCH /api/tasks/{id}/status`
-- `GET /api/tasks/due/today`
-- `GET /api/tasks/due/week`
-- `GET /api/tasks/overdue`
-- `GET /api/audit-events`
-- `GET /api/dashboard/summary`
-- `GET /api/dashboard/stale`
-- `GET /api/dashboard/next-actions`
-- `GET /api/dashboard/activity`
-
-## Tech Stack
-
-### Frontend
-- React 18 + TypeScript
-- Vite
-- Axios
-
-### Backend
-- Spring Boot 3.2.1 (Java 17)
-- Spring Data JPA
-- PostgreSQL (Supabase)
-
-## Project Structure
-
-```
-dev/
-├── backend/              # Spring Boot backend
-│   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/com/dev/backend/
-│   │   │   │   ├── config/       # Configuration classes
-│   │   │   │   ├── controller/   # REST controllers
-│   │   │   │   ├── model/        # Entity models
-│   │   │   │   ├── repository/   # JPA repositories
-│   │   │   │   └── service/      # Business logic
-│   │   │   └── resources/
-│   │   │       └── application.properties
-│   │   └── test/
-│   └── pom.xml
-│
-└── frontend/             # React frontend
-    ├── src/
-    │   ├── components/   # React components
-    │   ├── lib/          # Library configurations
-    │   ├── pages/        # Page components
-    │   ├── services/     # API service layers
-    │   └── types/        # TypeScript type definitions
-    └── package.json
-```
-
-## Build & Test
+## Testing
 
 ```bash
 make backend-test
-make backend-build
 make frontend-lint
-make frontend-build
 ```
 
-## Troubleshooting
+## Design Decisions
 
-- Connection refused: verify Supabase credentials and backend port.
-- Cannot connect to backend: confirm `VITE_API_BASE_URL`.
+- Chose Postgres/Supabase over NoSQL for strict relational constraints between applications, tasks, and stage events.
+- Used JWT auth to keep the API stateless and friendly to multiple clients.
+- Added audit events early to support traceability for workflow changes.
 
-## License
 
-MIT
 
-## Contributing
+## API Endpoints (high level)
 
-Pull requests welcome.
-
-## Support
-
-- Setup: [QUICKSTART.md](./QUICKSTART.md)
-- Architecture: [ARCHITECTURE.md](./ARCHITECTURE.md)
-- Deployment: [DEPLOYMENT.md](./DEPLOYMENT.md)
+Auth: signup/login/refresh/logout/MFA  
+Applications: CRUD + stage transitions  
+Tasks: create, update status, due windows  
+Dashboards: summary, stale, next actions, activity  
+System: health, metrics
