@@ -4,7 +4,7 @@ A full-stack operations dashboard for managing a job search with workflow automa
 
 ## Demo
 
-[Live Site](https://job-application-tracker-seanlumasag.vercel.app)
+[Live Site](https://jobtrack-seanlumasag.vercel.app)
 
 
 ## Features
