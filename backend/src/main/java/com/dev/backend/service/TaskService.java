@@ -67,6 +67,24 @@ public class TaskService {
         return taskRepository.findAllByApplicationId(application.getId(), sort);
     }
 
+    @Transactional
+    public void delete(UUID userId, Long taskId) {
+        Task task = taskRepository.findByIdAndApplicationUserId(taskId, userId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
+        taskRepository.delete(task);
+        auditService.record(
+                userId,
+                "task.deleted",
+                "task",
+                task.getId(),
+                java.util.Map.of(
+                        "applicationId", task.getApplication().getId(),
+                        "title", task.getTitle(),
+                        "actor", "user:" + userId
+                )
+        );
+    }
+
     public Task update(UUID userId, Long taskId, TaskUpdateRequest request) {
         Task task = taskRepository.findByIdAndApplicationUserId(taskId, userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Task not found"));
