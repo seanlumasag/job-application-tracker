@@ -10,8 +10,8 @@ export default function Landing() {
       <header className="border-b border-purple-100 bg-white/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-600 to-purple-700 flex items-center justify-center">
-              <Briefcase className="h-5 w-5 text-white" />
+            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-purple-600 to-purple-700 flex items-center justify-center text-white text-xs font-semibold tracking-wide">
+              JT
             </div>
             <span className="text-xl font-semibold bg-gradient-to-r from-purple-600 to-purple-800 bg-clip-text text-transparent">
               JobTrack
@@ -54,21 +54,7 @@ export default function Landing() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto mt-20">
-          <div className="text-center">
-            <div className="text-4xl font-bold text-purple-600 mb-2">10K+</div>
-            <div className="text-gray-600">Active Users</div>
-          </div>
-          <div className="text-center">
-            <div className="text-4xl font-bold text-purple-600 mb-2">50K+</div>
-            <div className="text-gray-600">Jobs Tracked</div>
-          </div>
-          <div className="text-center">
-            <div className="text-4xl font-bold text-purple-600 mb-2">85%</div>
-            <div className="text-gray-600">Success Rate</div>
-          </div>
-        </div>
+        {/* Stats removed */}
       </section>
 
       {/* Features Section */}
@@ -149,8 +135,8 @@ export default function Landing() {
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-purple-600 to-purple-700 flex items-center justify-center">
-                <Briefcase className="h-4 w-4 text-white" />
+              <div className="h-6 w-6 rounded-lg bg-gradient-to-br from-purple-600 to-purple-700 flex items-center justify-center text-white text-[10px] font-semibold tracking-wide">
+                JT
               </div>
               <span className="font-semibold text-purple-600">JobTrack</span>
             </div>

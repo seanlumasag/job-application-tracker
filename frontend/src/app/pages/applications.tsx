@@ -87,11 +87,7 @@ export default function Applications() {
     };
   }, [navigate]);
 
-  const initials = useMemo(() => {
-    if (!profile?.email) return "JT";
-    const raw = profile.email.split("@")[0].replace(/[^a-zA-Z]/g, "");
-    return raw.slice(0, 2).toUpperCase() || "JT";
-  }, [profile?.email]);
+  const initials = "JT";
 
   const filteredApplications = useMemo(() => {
     if (activeStage === "ALL") return applications;
