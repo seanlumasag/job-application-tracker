@@ -48,9 +48,6 @@ export default function Landing() {
                 Start Tracking Free
               </Button>
             </Link>
-            <Button size="lg" variant="outline" className="text-lg px-8">
-              Watch Demo
-            </Button>
           </div>
         </div>
 
@@ -69,7 +66,7 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
             <Card className="p-6 hover:shadow-lg transition-shadow border-purple-100">
               <div className="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center mb-4">
                 <Briefcase className="h-6 w-6 text-purple-600" />
@@ -100,15 +97,6 @@ export default function Landing() {
               </p>
             </Card>
 
-            <Card className="p-6 hover:shadow-lg transition-shadow border-purple-100">
-              <div className="h-12 w-12 rounded-lg bg-purple-100 flex items-center justify-center mb-4">
-                <Bell className="h-6 w-6 text-purple-600" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Smart Reminders</h3>
-              <p className="text-gray-600 text-sm">
-                Never miss a follow-up with automated reminders and notifications
-              </p>
-            </Card>
           </div>
         </div>
       </section>
